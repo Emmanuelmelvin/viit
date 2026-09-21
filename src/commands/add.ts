@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readdir, stat } from "node:fs/promises";
 import { readIndex, writeIndex } from "../core/index.js";
+import { markConflictsResolved } from "../core/merge-state.js";
 import { writeBlob } from "../core/objects.js";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".viit", "dist", "node_modules"]);
@@ -44,12 +45,16 @@ export async function addCommand(fileNames: string[]): Promise<void> {
     }
   }
 
+  const stagedPaths: string[] = [];
+
   for (const fileName of files) {
     const objectId = await writeBlob(fileName);
     const indexPath = toIndexPath(fileName);
     index[indexPath] = objectId;
+    stagedPaths.push(indexPath);
     console.log(`added ${indexPath}`);
   }
 
   await writeIndex(index);
+  await markConflictsResolved(stagedPaths);
 }
