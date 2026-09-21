@@ -1,0 +1,49 @@
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { readIndex, writeIndex } from "../core/index.js";
+import { readObject } from "../core/objects.js";
+import { readHeadRef, writeRef } from "../core/refs.js";
+import { readCommitTree } from "../core/commits.js";
+import { readTree } from "../core/trees.js";
+
+const HASH_PATTERN = /^[0-9a-f]{40}$/;
+
+export async function checkoutCommand(commitId: string): Promise<void> {
+  if (!HASH_PATTERN.test(commitId)) {
+    throw new Error("Commit ID must be a 40-character SHA-1 hash");
+  }
+
+  const treeId = await readCommitTree(commitId);
+  const targetIndex = await readTree(treeId);
+  const currentIndex = await readIndex();
+
+  for (const [filePath, objectId] of Object.entries(targetIndex)) {
+    const object = await readObject(objectId);
+
+    if (object.type !== "blob") {
+      throw new Error(`${objectId} is not a blob object`);
+    }
+
+    const absolutePath = path.resolve(process.cwd(), filePath);
+    await mkdir(path.dirname(absolutePath), { recursive: true });
+    await writeFile(absolutePath, object.content);
+  }
+
+  for (const filePath of Object.keys(currentIndex)) {
+    if (targetIndex[filePath]) {
+      continue;
+    }
+
+    try {
+      await unlink(path.resolve(process.cwd(), filePath));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+
+  await writeIndex(targetIndex);
+  await writeRef(await readHeadRef(), commitId);
+  console.log(`Checked out ${commitId}`);
+}
