@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { catFileCommand } from "./commands/cat-file.js";
+import { addCommand } from "./commands/add.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 
@@ -27,6 +28,19 @@ switch (command) {
     break;
   }
 
+  case "add": {
+    const fileNames = args.slice(1);
+
+    if (fileNames.length === 0) {
+      console.error("Usage: viit add <file> [...files]");
+      process.exitCode = 1;
+      break;
+    }
+
+    await addCommand(fileNames);
+    break;
+  }
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -42,6 +56,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|hash-object|cat-file>");
     process.exitCode = 1;
 }
