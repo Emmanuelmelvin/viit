@@ -5,6 +5,7 @@ import { readObject } from "../core/objects.js";
 import { readHeadRef, writeRef } from "../core/refs.js";
 import { readCommitTree } from "../core/commits.js";
 import { readTree } from "../core/trees.js";
+import { assertCleanWorktree } from "../core/worktree.js";
 
 const HASH_PATTERN = /^[0-9a-f]{40}$/;
 
@@ -50,6 +51,7 @@ export async function restoreCommit(commitId: string): Promise<void> {
 }
 
 export async function checkoutCommand(commitId: string): Promise<void> {
+  await assertCleanWorktree("checkout");
   await restoreCommit(commitId);
   await writeRef(await readHeadRef(), commitId);
   console.log(`Checked out ${commitId}`);

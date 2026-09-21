@@ -1,8 +1,8 @@
 import path from "node:path";
 import { readdir, stat } from "node:fs/promises";
 import { readIndex, writeIndex } from "../core/index.js";
-import { markConflictsResolved } from "../core/merge-state.js";
-import { markRebaseConflictsResolved } from "../core/rebase-state.js";
+import { markConflictsResolved, readMergeConflicts } from "../core/merge-state.js";
+import { markRebaseConflictsResolved, readRebaseState } from "../core/rebase-state.js";
 import { writeBlob } from "../core/objects.js";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".viit", "dist", "node_modules"]);
@@ -39,21 +39,48 @@ async function expandPath(fileName: string): Promise<string[]> {
 export async function addCommand(fileNames: string[]): Promise<void> {
   const index = await readIndex();
   const files = new Set<string>();
+  const mergeConflicts = await readMergeConflicts();
+  const rebaseState = await readRebaseState();
+  const conflictPaths = new Set([
+    ...mergeConflicts,
+    ...(rebaseState?.conflicts ?? []),
+  ]);
 
   for (const fileName of fileNames) {
-    for (const file of await expandPath(fileName)) {
-      files.add(file);
+    try {
+      for (const file of await expandPath(fileName)) {
+        files.add(file);
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+
+      files.add(path.resolve(fileName));
     }
   }
 
   const stagedPaths: string[] = [];
 
   for (const fileName of files) {
-    const objectId = await writeBlob(fileName);
     const indexPath = toIndexPath(fileName);
-    index[indexPath] = objectId;
+
+    try {
+      index[indexPath] = await writeBlob(fileName);
+      console.log(`added ${indexPath}`);
+    } catch (error) {
+      if (
+        (error as NodeJS.ErrnoException).code !== "ENOENT"
+        || (!index[indexPath] && !conflictPaths.has(indexPath))
+      ) {
+        throw error;
+      }
+
+      delete index[indexPath];
+      console.log(`removed ${indexPath}`);
+    }
+
     stagedPaths.push(indexPath);
-    console.log(`added ${indexPath}`);
   }
 
   await writeIndex(index);

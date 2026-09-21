@@ -12,6 +12,7 @@ import {
 import { readObject } from "../core/objects.js";
 import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { readTree, writeTree } from "../core/trees.js";
+import { assertCleanWorktree } from "../core/worktree.js";
 import { restoreCommit, restoreTree } from "./checkout.js";
 
 type Tree = Record<string, string>;
@@ -103,10 +104,6 @@ async function collectCommits(currentId: string, baseId: string): Promise<string
 
   while (cursor !== baseId) {
     const parents = await readCommitParents(cursor);
-
-    if (parents.length > 1) {
-      throw new Error("Rebasing merge commits is not implemented yet");
-    }
 
     commits.push(cursor);
 
@@ -241,6 +238,8 @@ export async function rebaseCommand(target: string): Promise<void> {
   if (await readRebaseState()) {
     throw new Error("A rebase is already in progress; use --continue, --skip, or --abort");
   }
+
+  await assertCleanWorktree("rebase");
 
   const currentRef = await readHeadRef();
   const targetRef = branchRef(target);

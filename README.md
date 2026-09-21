@@ -32,6 +32,21 @@ viit merge <branch|--abort>
 viit rebase <branch|--continue|--abort|--skip>
 ```
 
+Checkout, branch switching, merge, and rebase refuse to overwrite staged,
+unstaged, or untracked files. Commit the changes first before changing the
+working tree.
+
+When rebase encounters a conflict, resolve the file and stage it:
+
+```bash
+viit add <file>
+viit rebase --continue
+```
+
+Use `viit rebase --abort` to restore the original branch, or
+`viit rebase --skip` to omit the conflicting commit. Rebase merge commits are
+flattened by replaying their first-parent changes.
+
 Lower-level commands are also available for learning:
 
 ```bash

@@ -12,6 +12,7 @@ import {
 import { readObject } from "../core/objects.js";
 import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { readTree, writeTree } from "../core/trees.js";
+import { assertCleanWorktree } from "../core/worktree.js";
 import { restoreCommit } from "./checkout.js";
 
 function branchRef(name: string): string {
@@ -101,6 +102,8 @@ export async function mergeCommand(targetBranch: string): Promise<void> {
   if (await readMergeHead()) {
     throw new Error("A merge is already in progress");
   }
+
+  await assertCleanWorktree("merge");
 
   const currentRef = await readHeadRef();
   const targetRef = branchRef(targetBranch);
