@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
 import { branchCommand } from "./commands/branch.js";
+import { catFileCommand } from "./commands/cat-file.js";
 import { checkoutCommand } from "./commands/checkout.js";
 import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
@@ -13,178 +13,182 @@ import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
-import { writeTreeCommand } from "./commands/write-tree.js";
 import { updateRefCommand } from "./commands/update-ref.js";
+import { writeTreeCommand } from "./commands/write-tree.js";
+import { COMMANDS, fail, printHelp, suggestCommand } from "./cli/help.js";
 
-// Ignore Node's executable and script path.
 const args = process.argv.slice(2);
 const command = args[0];
+const helpRequested = args[1] === "--help" || args[1] === "-h";
 
-try {
-switch (command) {
-  case "init":
-    await initCommand();
-    break;
+if (!command || command === "--help" || command === "-h") {
+  printHelp();
+  process.exitCode = command ? 0 : 1;
+} else if (command === "help") {
+  printHelp(args[1]);
+} else if (helpRequested) {
+  printHelp(command);
+} else if (!COMMANDS.includes(command as typeof COMMANDS[number])) {
+  const suggestion = suggestCommand(command);
+  console.error(`error: '${command}' is not a Viit command.`);
 
-  case "hash-object": {
-    const shouldWrite = args[1] === "-w";
-    const fileName = shouldWrite ? args[2] : args[1];
-
-    if (!fileName) {
-      console.error("Usage: viit hash-object [-w] <file>");
-      process.exitCode = 1;
-      break;
-    }
-
-    await hashObjectCommand(fileName, shouldWrite);
-    break;
+  if (suggestion) {
+    console.error(`Did you mean '${suggestion}'?`);
   }
 
-  case "add": {
-    const fileNames = args.slice(1);
+  console.error("Run 'viit --help' for available commands.");
+  process.exitCode = 1;
+} else {
+  try {
+    switch (command) {
+      case "init":
+        await initCommand();
+        break;
 
-    if (fileNames.length === 0) {
-      console.error("Usage: viit add <file> [...files]");
-      process.exitCode = 1;
-      break;
-    }
+      case "hash-object": {
+        const shouldWrite = args[1] === "-w";
+        const fileName = shouldWrite ? args[2] : args[1];
 
-    await addCommand(fileNames);
-    break;
-  }
+        if (!fileName) {
+          fail(command, "a file path is required");
+          break;
+        }
 
-  case "write-tree":
-    await writeTreeCommand();
-    break;
+        await hashObjectCommand(fileName, shouldWrite);
+        break;
+      }
 
-  case "commit": {
-    const messageIndex = args.indexOf("-m");
-    const message = messageIndex === -1 ? undefined : args[messageIndex + 1];
+      case "add": {
+        const fileNames = args.slice(1);
 
-    if (!message) {
-      console.error("Usage: viit commit -m <message>");
-      process.exitCode = 1;
-      break;
-    }
+        if (fileNames.length === 0) {
+          fail(command, "at least one file path is required");
+          break;
+        }
 
-    await commitCommand(message);
-    break;
-  }
+        await addCommand(fileNames);
+        break;
+      }
 
-  case "checkout": {
-    const commitId = args[1];
+      case "branch":
+        await branchCommand(args[1]);
+        break;
 
-    if (!commitId) {
-      console.error("Usage: viit checkout <commit-id>");
-      process.exitCode = 1;
-      break;
-    }
+      case "switch": {
+        const branchName = args[1];
 
-    await checkoutCommand(commitId);
-    break;
-  }
+        if (!branchName) {
+          fail(command, "a branch name is required");
+          break;
+        }
 
-  case "branch":
-    await branchCommand(args[1]);
-    break;
+        await switchCommand(branchName);
+        break;
+      }
 
-  case "switch": {
-    const branchName = args[1];
+      case "merge": {
+        const targetBranch = args[1];
 
-    if (!branchName) {
-      console.error("Usage: viit switch <branch>");
-      process.exitCode = 1;
-      break;
-    }
+        if (!targetBranch) {
+          fail(command, "a branch name or --abort is required");
+          break;
+        }
 
-    await switchCommand(branchName);
-    break;
-  }
+        await mergeCommand(targetBranch);
+        break;
+      }
 
-  case "merge": {
-    const targetBranch = args[1];
+      case "write-tree":
+        await writeTreeCommand();
+        break;
 
-    if (!targetBranch) {
-      console.error("Usage: viit merge <branch|--abort>");
-      process.exitCode = 1;
-      break;
-    }
+      case "commit": {
+        const messageIndex = args.indexOf("-m");
+        const message = messageIndex === -1 ? undefined : args[messageIndex + 1];
 
-    await mergeCommand(targetBranch);
-    break;
-  }
+        if (!message) {
+          fail(command, "a commit message is required with -m");
+          break;
+        }
 
-  case "commit-tree": {
-    const treeId = args[1];
-    let parentId: string | undefined;
-    let message: string | undefined;
+        await commitCommand(message);
+        break;
+      }
 
-    for (let index = 2; index < args.length; index += 1) {
-      if (args[index] === "-p") {
-        parentId = args[index + 1];
-        index += 1;
-      } else if (args[index] === "-m") {
-        message = args[index + 1];
-        index += 1;
+      case "checkout": {
+        const commitId = args[1];
+
+        if (!commitId) {
+          fail(command, "a commit ID is required");
+          break;
+        }
+
+        await checkoutCommand(commitId);
+        break;
+      }
+
+      case "commit-tree": {
+        const treeId = args[1];
+        let parentId: string | undefined;
+        let message: string | undefined;
+
+        for (let index = 2; index < args.length; index += 1) {
+          if (args[index] === "-p") {
+            parentId = args[index + 1];
+            index += 1;
+          } else if (args[index] === "-m") {
+            message = args[index + 1];
+            index += 1;
+          }
+        }
+
+        if (!treeId || !message) {
+          fail(command, "a tree ID and commit message are required");
+          break;
+        }
+
+        await commitTreeCommand(treeId, parentId, message);
+        break;
+      }
+
+      case "update-ref": {
+        const refName = args[1];
+        const objectId = args[2];
+
+        if (!refName || !objectId) {
+          fail(command, "a ref name and object ID are required");
+          break;
+        }
+
+        await updateRefCommand(refName, objectId);
+        break;
+      }
+
+      case "log":
+        await logCommand();
+        break;
+
+      case "status":
+        await statusCommand();
+        break;
+
+      case "diff":
+        await diffCommand(args[1] === "--cached");
+        break;
+
+      case "cat-file": {
+        if (args[1] !== "-p" || !args[2]) {
+          fail(command, "-p and an object ID are required");
+          break;
+        }
+
+        await catFileCommand(args[2]);
+        break;
       }
     }
-
-    if (!treeId || !message) {
-      console.error("Usage: viit commit-tree <tree-id> [-p <parent-id>] -m <message>");
-      process.exitCode = 1;
-      break;
-    }
-
-    await commitTreeCommand(treeId, parentId, message);
-    break;
-  }
-
-  case "update-ref": {
-    const refName = args[1];
-    const objectId = args[2];
-
-    if (!refName || !objectId) {
-      console.error("Usage: viit update-ref <ref> <object-id>");
-      process.exitCode = 1;
-      break;
-    }
-
-    await updateRefCommand(refName, objectId);
-    break;
-  }
-
-  case "log":
-    await logCommand();
-    break;
-
-  case "status":
-    await statusCommand();
-    break;
-
-  case "diff":
-    await diffCommand(args[1] === "--cached");
-    break;
-
-  case "cat-file": {
-    const option = args[1];
-    const objectId = args[2];
-
-    if (option !== "-p" || !objectId) {
-      console.error("Usage: viit cat-file -p <object-id>");
-      process.exitCode = 1;
-      break;
-    }
-
-    await catFileCommand(objectId);
-    break;
-  }
-
-  default:
-    console.error("Usage: viit <init|add|branch|switch|merge|write-tree|commit|checkout|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`fatal: ${message}`);
     process.exitCode = 1;
-}
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`fatal: ${message}`);
-  process.exitCode = 1;
+  }
 }
