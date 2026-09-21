@@ -208,7 +208,7 @@ async function abortMerge(): Promise<void> {
   const originalHead = await readMergeOriginalHead();
 
   if (!originalHead) {
-    throw new Error("No merge is in progress");
+    throw new Error("There is no merge to abort");
   }
 
   const currentRef = await readHeadRef();

@@ -20,6 +20,7 @@ import { updateRefCommand } from "./commands/update-ref.js";
 const args = process.argv.slice(2);
 const command = args[0];
 
+try {
 switch (command) {
   case "init":
     await initCommand();
@@ -181,4 +182,9 @@ switch (command) {
   default:
     console.error("Usage: viit <init|add|branch|switch|merge|write-tree|commit|checkout|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
     process.exitCode = 1;
+}
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`fatal: ${message}`);
+  process.exitCode = 1;
 }
