@@ -21,12 +21,17 @@ export async function readRef(refName: string): Promise<string> {
 }
 
 export async function readHead(): Promise<string> {
+  const refName = await readHeadRef();
+  return readRef(refName);
+}
+
+export async function readHeadRef(): Promise<string> {
   const headPath = path.join(getViitDirectory(), "HEAD");
   const head = (await readFile(headPath, "utf8")).trim();
 
   if (head.startsWith("ref: ")) {
-    return readRef(head.slice("ref: ".length));
+    return head.slice("ref: ".length);
   }
 
-  return head;
+  throw new Error("Detached HEAD is not supported");
 }
