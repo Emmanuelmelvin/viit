@@ -2,6 +2,7 @@
 
 import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
+import { commitTreeCommand } from "./commands/commit-tree.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { writeTreeCommand } from "./commands/write-tree.js";
@@ -46,6 +47,31 @@ switch (command) {
     await writeTreeCommand();
     break;
 
+  case "commit-tree": {
+    const treeId = args[1];
+    let parentId: string | undefined;
+    let message: string | undefined;
+
+    for (let index = 2; index < args.length; index += 1) {
+      if (args[index] === "-p") {
+        parentId = args[index + 1];
+        index += 1;
+      } else if (args[index] === "-m") {
+        message = args[index + 1];
+        index += 1;
+      }
+    }
+
+    if (!treeId || !message) {
+      console.error("Usage: viit commit-tree <tree-id> [-p <parent-id>] -m <message>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await commitTreeCommand(treeId, parentId, message);
+    break;
+  }
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -61,6 +87,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit-tree|hash-object|cat-file>");
     process.exitCode = 1;
 }
