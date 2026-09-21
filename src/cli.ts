@@ -11,6 +11,7 @@ import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
+import { rebaseCommand } from "./commands/rebase.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
 import { updateRefCommand } from "./commands/update-ref.js";
@@ -95,6 +96,18 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await mergeCommand(targetBranch);
+        break;
+      }
+
+      case "rebase": {
+        const targetBranch = args[1];
+
+        if (!targetBranch) {
+          fail(command, "a target branch is required");
+          break;
+        }
+
+        await rebaseCommand(targetBranch);
         break;
       }
 

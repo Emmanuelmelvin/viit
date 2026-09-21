@@ -78,3 +78,20 @@ export async function readCommitParents(commitId: string): Promise<string[]> {
     .filter((line) => line.startsWith("parent "))
     .map((line) => line.slice("parent ".length));
 }
+
+export async function readCommitMessage(commitId: string): Promise<string> {
+  const object = await readObject(commitId);
+
+  if (object.type !== "commit") {
+    throw new Error(`${commitId} is not a commit object`);
+  }
+
+  const content = object.content.toString();
+  const separator = content.indexOf("\n\n");
+
+  if (separator === -1) {
+    return "";
+  }
+
+  return content.slice(separator + 2).replace(/\n$/, "");
+}

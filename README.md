@@ -26,6 +26,10 @@ viit diff --cached
 viit commit -m "Commit message"
 viit log
 viit checkout <commit-id>
+viit branch [name]
+viit switch <branch>
+viit merge <branch|--abort>
+viit rebase <branch>
 ```
 
 Lower-level commands are also available for learning:
