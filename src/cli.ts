@@ -2,6 +2,7 @@
 
 import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
+import { checkoutCommand } from "./commands/checkout.js";
 import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
 import { diffCommand } from "./commands/diff.js";
@@ -63,6 +64,19 @@ switch (command) {
     }
 
     await commitCommand(message);
+    break;
+  }
+
+  case "checkout": {
+    const commitId = args[1];
+
+    if (!commitId) {
+      console.error("Usage: viit checkout <commit-id>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await checkoutCommand(commitId);
     break;
   }
 
@@ -132,6 +146,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit|checkout|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
     process.exitCode = 1;
 }
