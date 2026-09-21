@@ -1,61 +1,7 @@
 import { readIndex } from "../core/index.js";
-import { writeObject } from "../core/objects.js";
-
-type TreeNode = {
-  files: Map<string, string>;
-  directories: Map<string, TreeNode>;
-};
-
-function createTreeNode(): TreeNode {
-  return {
-    files: new Map(),
-    directories: new Map(),
-  };
-}
-
-function buildTree(index: Record<string, string>): TreeNode {
-  const root = createTreeNode();
-
-  for (const [filePath, objectId] of Object.entries(index)) {
-    const parts = filePath.split("/");
-    let node = root;
-
-    for (const directory of parts.slice(0, -1)) {
-      if (!node.directories.has(directory)) {
-        node.directories.set(directory, createTreeNode());
-      }
-
-      node = node.directories.get(directory)!;
-    }
-
-    node.files.set(parts.at(-1)!, objectId);
-  }
-
-  return root;
-}
-
-async function writeTreeNode(node: TreeNode): Promise<string> {
-  const entries: Buffer[] = [];
-
-  for (const [name, objectId] of [...node.files].sort()) {
-    entries.push(Buffer.from(`100644 ${name}\0`));
-    entries.push(Buffer.from(objectId, "hex"));
-  }
-
-  for (const [name, childNode] of [...node.directories].sort()) {
-    const childObjectId = await writeTreeNode(childNode);
-    entries.push(Buffer.from(`40000 ${name}\0`));
-    entries.push(Buffer.from(childObjectId, "hex"));
-  }
-
-  // Tree entries store object IDs as 20 raw bytes, not 40 hex characters.
-  return writeObject("tree", Buffer.concat(entries));
-}
+import { writeTree } from "../core/trees.js";
 
 export async function writeTreeCommand(): Promise<void> {
-  const index = await readIndex();
-  const root = buildTree(index);
-  const treeObjectId = await writeTreeNode(root);
-
+  const treeObjectId = await writeTree(await readIndex());
   console.log(treeObjectId);
 }
