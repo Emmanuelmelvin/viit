@@ -7,6 +7,7 @@ import { commitTreeCommand } from "./commands/commit-tree.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
+import { statusCommand } from "./commands/status.js";
 import { writeTreeCommand } from "./commands/write-tree.js";
 import { updateRefCommand } from "./commands/update-ref.js";
 
@@ -107,6 +108,10 @@ switch (command) {
     await logCommand();
     break;
 
+  case "status":
+    await statusCommand();
+    break;
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -122,6 +127,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|status|hash-object|cat-file>");
     process.exitCode = 1;
 }
