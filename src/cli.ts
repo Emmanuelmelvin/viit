@@ -2,6 +2,7 @@
 
 import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
+import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
@@ -48,6 +49,20 @@ switch (command) {
   case "write-tree":
     await writeTreeCommand();
     break;
+
+  case "commit": {
+    const messageIndex = args.indexOf("-m");
+    const message = messageIndex === -1 ? undefined : args[messageIndex + 1];
+
+    if (!message) {
+      console.error("Usage: viit commit -m <message>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await commitCommand(message);
+    break;
+  }
 
   case "commit-tree": {
     const treeId = args[1];
@@ -107,6 +122,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit-tree|update-ref|log|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|hash-object|cat-file>");
     process.exitCode = 1;
 }
