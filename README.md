@@ -29,7 +29,7 @@ viit checkout <commit-id>
 viit branch [name]
 viit switch <branch>
 viit merge <branch|--abort>
-viit rebase <branch>
+viit rebase <branch|--continue|--abort|--skip>
 ```
 
 Lower-level commands are also available for learning:

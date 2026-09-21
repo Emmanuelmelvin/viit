@@ -2,6 +2,7 @@ import path from "node:path";
 import { readdir, stat } from "node:fs/promises";
 import { readIndex, writeIndex } from "../core/index.js";
 import { markConflictsResolved } from "../core/merge-state.js";
+import { markRebaseConflictsResolved } from "../core/rebase-state.js";
 import { writeBlob } from "../core/objects.js";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".viit", "dist", "node_modules"]);
@@ -57,4 +58,5 @@ export async function addCommand(fileNames: string[]): Promise<void> {
 
   await writeIndex(index);
   await markConflictsResolved(stagedPaths);
+  await markRebaseConflictsResolved(stagedPaths);
 }

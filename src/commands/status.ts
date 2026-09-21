@@ -3,6 +3,7 @@ import path from "node:path";
 import { readCommitTree } from "../core/commits.js";
 import { readIndex } from "../core/index.js";
 import { readMergeConflicts } from "../core/merge-state.js";
+import { readRebaseState } from "../core/rebase-state.js";
 import { hashBlob } from "../core/objects.js";
 import { readHead, readHeadRef } from "../core/refs.js";
 import { readTree } from "../core/trees.js";
@@ -67,7 +68,8 @@ export async function statusCommand(): Promise<void> {
   const staged: string[] = [];
   const unstaged: string[] = [];
   const untracked: string[] = [];
-  const conflicts = await readMergeConflicts();
+  const rebaseState = await readRebaseState();
+  const conflicts = rebaseState?.conflicts ?? await readMergeConflicts();
 
   for (const [filePath, objectId] of Object.entries(index)) {
     if (!headTree[filePath]) {
@@ -98,6 +100,12 @@ export async function statusCommand(): Promise<void> {
   const refName = await readHeadRef();
   console.log(`On branch ${refName.split("/").at(-1)}`);
   console.log();
+
+  if (rebaseState) {
+    console.log(`Rebase in progress: replaying commit ${rebaseState.commits[rebaseState.nextIndex]}`);
+    console.log();
+  }
+
   printSection("Unmerged paths", conflicts);
   printSection("Changes to be committed", staged);
   printSection("Changes not staged for commit", unstaged);

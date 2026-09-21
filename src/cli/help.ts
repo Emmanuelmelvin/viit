@@ -23,7 +23,7 @@ const USAGE: Record<string, string> = {
   branch: "viit branch [name]",
   switch: "viit switch <branch>",
   merge: "viit merge <branch|--abort>",
-  rebase: "viit rebase <branch>",
+  rebase: "viit rebase <branch|--continue|--abort|--skip>",
   "write-tree": "viit write-tree",
   commit: "viit commit -m <message>",
   checkout: "viit checkout <commit-id>",
