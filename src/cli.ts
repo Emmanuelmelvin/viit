@@ -4,6 +4,7 @@ import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
 import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
+import { diffCommand } from "./commands/diff.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
@@ -112,6 +113,10 @@ switch (command) {
     await statusCommand();
     break;
 
+  case "diff":
+    await diffCommand(args[1] === "--cached");
+    break;
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -127,6 +132,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|status|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
     process.exitCode = 1;
 }
