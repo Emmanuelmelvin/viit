@@ -13,15 +13,21 @@ function getTimezoneOffset(date: Date): string {
 
 export async function writeCommit(
   treeId: string,
-  parentId: string | undefined,
+  parentIds: string | string[] | undefined,
   message: string,
 ): Promise<string> {
   if (!HASH_PATTERN.test(treeId)) {
     throw new Error("Tree ID must be a 40-character SHA-1 hash");
   }
 
-  if (parentId && !HASH_PATTERN.test(parentId)) {
-    throw new Error("Parent ID must be a 40-character SHA-1 hash");
+  const parents = parentIds === undefined
+    ? []
+    : Array.isArray(parentIds)
+      ? parentIds
+      : [parentIds];
+
+  if (parents.some((parentId) => !HASH_PATTERN.test(parentId))) {
+    throw new Error("Parent IDs must be 40-character SHA-1 hashes");
   }
 
   const name = process.env.VIIT_AUTHOR_NAME ?? "Viit User";
@@ -32,9 +38,7 @@ export async function writeCommit(
   const identity = `${name} <${email}> ${timestamp} ${timezone}`;
   const headers = [`tree ${treeId}`];
 
-  if (parentId) {
-    headers.push(`parent ${parentId}`);
-  }
+  headers.push(...parents.map((parentId) => `parent ${parentId}`));
 
   headers.push(`author ${identity}`, `committer ${identity}`);
 
