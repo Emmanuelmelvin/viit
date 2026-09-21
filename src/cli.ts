@@ -2,6 +2,7 @@
 
 import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
+import { branchCommand } from "./commands/branch.js";
 import { checkoutCommand } from "./commands/checkout.js";
 import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
@@ -9,7 +10,9 @@ import { diffCommand } from "./commands/diff.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
+import { mergeCommand } from "./commands/merge.js";
 import { statusCommand } from "./commands/status.js";
+import { switchCommand } from "./commands/switch.js";
 import { writeTreeCommand } from "./commands/write-tree.js";
 import { updateRefCommand } from "./commands/update-ref.js";
 
@@ -80,6 +83,36 @@ switch (command) {
     break;
   }
 
+  case "branch":
+    await branchCommand(args[1]);
+    break;
+
+  case "switch": {
+    const branchName = args[1];
+
+    if (!branchName) {
+      console.error("Usage: viit switch <branch>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await switchCommand(branchName);
+    break;
+  }
+
+  case "merge": {
+    const targetBranch = args[1];
+
+    if (!targetBranch) {
+      console.error("Usage: viit merge <branch>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await mergeCommand(targetBranch);
+    break;
+  }
+
   case "commit-tree": {
     const treeId = args[1];
     let parentId: string | undefined;
@@ -146,6 +179,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit|checkout|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|branch|switch|merge|write-tree|commit|checkout|commit-tree|update-ref|log|status|diff|hash-object|cat-file>");
     process.exitCode = 1;
 }
