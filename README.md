@@ -64,6 +64,7 @@ Install dependencies and build the project:
 ```bash
 npm install
 npm run build
+npm test
 ```
 
 To make `viit` available as a local command:
