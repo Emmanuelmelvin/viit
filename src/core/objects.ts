@@ -4,8 +4,11 @@ import path from "node:path";
 import { deflateSync } from "node:zlib";
 import { getObjectPath } from "./repository.js";
 
-function createBlob(content: Buffer): { object: Buffer; objectId: string } {
-  const header = Buffer.from(`blob ${content.length}\0`);
+function createObject(
+  type: string,
+  content: Buffer,
+): { object: Buffer; objectId: string } {
+  const header = Buffer.from(`${type} ${content.length}\0`);
   const object = Buffer.concat([header, content]);
   const objectId = createHash("sha1").update(object).digest("hex");
 
@@ -14,12 +17,16 @@ function createBlob(content: Buffer): { object: Buffer; objectId: string } {
 
 export async function hashBlob(fileName: string): Promise<string> {
   const content = await readFile(fileName);
-  return createBlob(content).objectId;
+  return createObject("blob", content).objectId;
 }
 
 export async function writeBlob(fileName: string): Promise<string> {
   const content = await readFile(fileName);
-  const { object, objectId } = createBlob(content);
+  return writeObject("blob", content);
+}
+
+export async function writeObject(type: string, content: Buffer): Promise<string> {
+  const { object, objectId } = createObject(type, content);
   const objectPath = getObjectPath(objectId);
 
   await mkdir(path.dirname(objectPath), { recursive: true });
