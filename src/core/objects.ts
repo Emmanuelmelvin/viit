@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { deflateSync } from "node:zlib";
+import { deflateSync, inflateSync } from "node:zlib";
 import { getObjectPath } from "./repository.js";
 
 function createObject(
@@ -33,4 +33,24 @@ export async function writeObject(type: string, content: Buffer): Promise<string
   await writeFile(objectPath, deflateSync(object));
 
   return objectId;
+}
+
+export async function readObject(
+  objectId: string,
+): Promise<{ type: string; content: Buffer }> {
+  const compressedObject = await readFile(getObjectPath(objectId));
+  const object = inflateSync(compressedObject);
+  const headerEnd = object.indexOf(0);
+
+  if (headerEnd === -1) {
+    throw new Error("Stored object is missing its header");
+  }
+
+  const header = object.subarray(0, headerEnd).toString();
+  const type = header.split(" ")[0];
+
+  return {
+    type,
+    content: object.subarray(headerEnd + 1),
+  };
 }
