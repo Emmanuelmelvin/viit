@@ -60,3 +60,17 @@ export async function readCommitTree(commitId: string): Promise<string> {
 
   return treeHeader.slice("tree ".length);
 }
+
+export async function readCommitParents(commitId: string): Promise<string[]> {
+  const object = await readObject(commitId);
+
+  if (object.type !== "commit") {
+    throw new Error(`${commitId} is not a commit object`);
+  }
+
+  return object.content
+    .toString()
+    .split("\n")
+    .filter((line) => line.startsWith("parent "))
+    .map((line) => line.slice("parent ".length));
+}
