@@ -4,6 +4,7 @@ import { catFileCommand } from "./commands/cat-file.js";
 import { addCommand } from "./commands/add.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
+import { writeTreeCommand } from "./commands/write-tree.js";
 
 // Ignore Node's executable and script path.
 const args = process.argv.slice(2);
@@ -41,6 +42,10 @@ switch (command) {
     break;
   }
 
+  case "write-tree":
+    await writeTreeCommand();
+    break;
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -56,6 +61,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|hash-object|cat-file>");
     process.exitCode = 1;
 }
