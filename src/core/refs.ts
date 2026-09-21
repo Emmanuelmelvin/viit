@@ -16,6 +16,11 @@ export async function writeRef(refName: string, objectId: string): Promise<void>
   await writeFile(refPath, `${objectId}\n`);
 }
 
+export async function writeHeadRef(refName: string): Promise<void> {
+  getRefPath(refName);
+  await writeFile(path.join(getViitDirectory(), "HEAD"), `ref: ${refName}\n`);
+}
+
 export async function readRef(refName: string): Promise<string> {
   return (await readFile(getRefPath(refName), "utf8")).trim();
 }
