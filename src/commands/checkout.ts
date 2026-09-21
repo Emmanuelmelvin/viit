@@ -8,7 +8,7 @@ import { readTree } from "../core/trees.js";
 
 const HASH_PATTERN = /^[0-9a-f]{40}$/;
 
-export async function restoreCommit(commitId: string): Promise<void> {
+export async function checkoutCommand(commitId: string): Promise<void> {
   if (!HASH_PATTERN.test(commitId)) {
     throw new Error("Commit ID must be a 40-character SHA-1 hash");
   }
@@ -44,10 +44,6 @@ export async function restoreCommit(commitId: string): Promise<void> {
   }
 
   await writeIndex(targetIndex);
-}
-
-export async function checkoutCommand(commitId: string): Promise<void> {
-  await restoreCommit(commitId);
   await writeRef(await readHeadRef(), commitId);
   console.log(`Checked out ${commitId}`);
 }

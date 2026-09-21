@@ -25,9 +25,6 @@ viit diff
 viit diff --cached
 viit commit -m "Commit message"
 viit log
-viit branch [name]
-viit switch <branch>
-viit merge <branch>
 viit checkout <commit-id>
 ```
 
@@ -82,4 +79,4 @@ src/
 └── core/                  # Objects, trees, refs, and index logic
 ```
 
-Viit is intentionally simpler than Git. Its index is stored as JSON, checkout can overwrite tracked files, and merge currently supports fast-forward merges plus basic three-way merges with conflict markers. The project is being expanded incrementally to make each Git concept understandable.
+Viit is intentionally simpler than Git. Its index is stored as JSON, and its checkout implementation is designed for learning rather than production safety. The project is being expanded incrementally to make each Git concept understandable.
