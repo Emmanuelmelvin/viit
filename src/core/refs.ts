@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getViitDirectory } from "./repository.js";
 
@@ -14,4 +14,19 @@ export async function writeRef(refName: string, objectId: string): Promise<void>
   const refPath = getRefPath(refName);
   await mkdir(path.dirname(refPath), { recursive: true });
   await writeFile(refPath, `${objectId}\n`);
+}
+
+export async function readRef(refName: string): Promise<string> {
+  return (await readFile(getRefPath(refName), "utf8")).trim();
+}
+
+export async function readHead(): Promise<string> {
+  const headPath = path.join(getViitDirectory(), "HEAD");
+  const head = (await readFile(headPath, "utf8")).trim();
+
+  if (head.startsWith("ref: ")) {
+    return readRef(head.slice("ref: ".length));
+  }
+
+  return head;
 }
