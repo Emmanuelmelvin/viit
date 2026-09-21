@@ -2,6 +2,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { readCommitParents, readCommitTree, writeCommit } from "../core/commits.js";
 import { writeIndex } from "../core/index.js";
+import {
+  clearMergeState,
+  readMergeHead,
+  readMergeOriginalHead,
+  writeMergeState,
+} from "../core/merge-state.js";
 import { readObject } from "../core/objects.js";
 import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { readTree, writeTree } from "../core/trees.js";
@@ -144,6 +150,15 @@ async function mergeTrees(
 }
 
 export async function mergeCommand(targetBranch: string): Promise<void> {
+  if (targetBranch === "--abort") {
+    await abortMerge();
+    return;
+  }
+
+  if (await readMergeHead()) {
+    throw new Error("A merge is already in progress");
+  }
+
   const currentRef = await readHeadRef();
   const targetRef = branchRef(targetBranch);
   const currentId = await readRef(currentRef);
@@ -168,6 +183,7 @@ export async function mergeCommand(targetBranch: string): Promise<void> {
   const result = await mergeTrees(baseTree, oursTree, theirsTree, targetBranch);
 
   if (result.conflicts.length > 0) {
+    await writeMergeState(currentId, targetId, result.conflicts);
     console.error("Merge conflicts:");
     for (const filePath of result.conflicts) {
       console.error(`  ${filePath}`);
@@ -186,4 +202,18 @@ export async function mergeCommand(targetBranch: string): Promise<void> {
   await restoreCommit(mergeCommitId);
   await writeRef(currentRef, mergeCommitId);
   console.log(`Merged ${targetBranch} in commit ${mergeCommitId}`);
+}
+
+async function abortMerge(): Promise<void> {
+  const originalHead = await readMergeOriginalHead();
+
+  if (!originalHead) {
+    throw new Error("No merge is in progress");
+  }
+
+  const currentRef = await readHeadRef();
+  await restoreCommit(originalHead);
+  await writeRef(currentRef, originalHead);
+  await clearMergeState();
+  console.log("Merge aborted");
 }
