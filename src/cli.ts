@@ -6,6 +6,7 @@ import { commitTreeCommand } from "./commands/commit-tree.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { writeTreeCommand } from "./commands/write-tree.js";
+import { updateRefCommand } from "./commands/update-ref.js";
 
 // Ignore Node's executable and script path.
 const args = process.argv.slice(2);
@@ -72,6 +73,20 @@ switch (command) {
     break;
   }
 
+  case "update-ref": {
+    const refName = args[1];
+    const objectId = args[2];
+
+    if (!refName || !objectId) {
+      console.error("Usage: viit update-ref <ref> <object-id>");
+      process.exitCode = 1;
+      break;
+    }
+
+    await updateRefCommand(refName, objectId);
+    break;
+  }
+
   case "cat-file": {
     const option = args[1];
     const objectId = args[2];
@@ -87,6 +102,6 @@ switch (command) {
   }
 
   default:
-    console.error("Usage: viit <init|add|write-tree|commit-tree|hash-object|cat-file>");
+    console.error("Usage: viit <init|add|write-tree|commit-tree|update-ref|hash-object|cat-file>");
     process.exitCode = 1;
 }
