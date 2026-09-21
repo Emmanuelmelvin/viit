@@ -1,4 +1,4 @@
-import { writeObject } from "./objects.js";
+import { readObject, writeObject } from "./objects.js";
 
 const HASH_PATTERN = /^[0-9a-f]{40}$/;
 
@@ -40,4 +40,23 @@ export async function writeCommit(
 
   const content = Buffer.from(`${headers.join("\n")}\n\n${message}\n`);
   return writeObject("commit", content);
+}
+
+export async function readCommitTree(commitId: string): Promise<string> {
+  const object = await readObject(commitId);
+
+  if (object.type !== "commit") {
+    throw new Error(`${commitId} is not a commit object`);
+  }
+
+  const treeHeader = object.content
+    .toString()
+    .split("\n")
+    .find((line) => line.startsWith("tree "));
+
+  if (!treeHeader) {
+    throw new Error(`${commitId} is missing its tree`);
+  }
+
+  return treeHeader.slice("tree ".length);
 }
