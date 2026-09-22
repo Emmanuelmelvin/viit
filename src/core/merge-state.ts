@@ -1,21 +1,12 @@
-import { readFile, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { getViitDirectory } from "./repository.js";
+import {
+  readRepositoryFile,
+  removeRepositoryFile,
+  writeRepositoryFile,
+} from "./repository-files.js";
 
-function statePath(name: string): string {
-  return path.join(getViitDirectory(), name);
-}
-
-async function readState(name: string): Promise<string | undefined> {
-  try {
-    return (await readFile(statePath(name), "utf8")).trim();
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return undefined;
-    }
-
-    throw error;
-  }
+async function readState(name: "mergeHead" | "mergeOriginalHead" | "mergeConflicts"):
+  Promise<string | undefined> {
+  return (await readRepositoryFile(name))?.trim();
 }
 
 export async function writeMergeState(
@@ -23,21 +14,21 @@ export async function writeMergeState(
   mergeHead: string,
   conflicts: string[],
 ): Promise<void> {
-  await writeFile(statePath("MERGE_ORIG_HEAD"), `${originalHead}\n`);
-  await writeFile(statePath("MERGE_HEAD"), `${mergeHead}\n`);
-  await writeFile(statePath("MERGE_CONFLICTS"), `${JSON.stringify(conflicts)}\n`);
+  await writeRepositoryFile("mergeOriginalHead", `${originalHead}\n`);
+  await writeRepositoryFile("mergeHead", `${mergeHead}\n`);
+  await writeRepositoryFile("mergeConflicts", `${JSON.stringify(conflicts)}\n`);
 }
 
 export async function readMergeHead(): Promise<string | undefined> {
-  return readState("MERGE_HEAD");
+  return readState("mergeHead");
 }
 
 export async function readMergeOriginalHead(): Promise<string | undefined> {
-  return readState("MERGE_ORIG_HEAD");
+  return readState("mergeOriginalHead");
 }
 
 export async function readMergeConflicts(): Promise<string[]> {
-  const conflicts = await readState("MERGE_CONFLICTS");
+  const conflicts = await readState("mergeConflicts");
   return conflicts ? JSON.parse(conflicts) as string[] : [];
 }
 
@@ -46,27 +37,17 @@ export async function markConflictsResolved(filePaths: string[]): Promise<void> 
   const remaining = conflicts.filter((filePath) => !filePaths.includes(filePath));
 
   if (remaining.length > 0) {
-    await writeFile(statePath("MERGE_CONFLICTS"), `${JSON.stringify(remaining)}\n`);
+    await writeRepositoryFile("mergeConflicts", `${JSON.stringify(remaining)}\n`);
     return;
   }
 
-  try {
-    await unlink(statePath("MERGE_CONFLICTS"));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
-    }
-  }
+  await removeRepositoryFile("mergeConflicts");
 }
 
 export async function clearMergeState(): Promise<void> {
-  for (const name of ["MERGE_HEAD", "MERGE_ORIG_HEAD", "MERGE_CONFLICTS"]) {
-    try {
-      await unlink(statePath(name));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-    }
-  }
+  await Promise.all([
+    removeRepositoryFile("mergeHead"),
+    removeRepositoryFile("mergeOriginalHead"),
+    removeRepositoryFile("mergeConflicts"),
+  ]);
 }

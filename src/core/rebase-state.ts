@@ -1,6 +1,8 @@
-import { readFile, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { getViitDirectory } from "./repository.js";
+import {
+  readRepositoryFile,
+  removeRepositoryFile,
+  writeRepositoryFile,
+} from "./repository-files.js";
 
 export type RebaseState = {
   branchRef: string;
@@ -12,24 +14,13 @@ export type RebaseState = {
   conflicts: string[];
 };
 
-function statePath(): string {
-  return path.join(getViitDirectory(), "REBASE_STATE");
-}
-
 export async function readRebaseState(): Promise<RebaseState | undefined> {
-  try {
-    return JSON.parse(await readFile(statePath(), "utf8")) as RebaseState;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return undefined;
-    }
-
-    throw error;
-  }
+  const state = await readRepositoryFile("rebaseState");
+  return state ? JSON.parse(state) as RebaseState : undefined;
 }
 
 export async function writeRebaseState(state: RebaseState): Promise<void> {
-  await writeFile(statePath(), `${JSON.stringify(state, null, 2)}\n`);
+  await writeRepositoryFile("rebaseState", `${JSON.stringify(state, null, 2)}\n`);
 }
 
 export async function markRebaseConflictsResolved(filePaths: string[]): Promise<void> {
@@ -44,11 +35,5 @@ export async function markRebaseConflictsResolved(filePaths: string[]): Promise<
 }
 
 export async function clearRebaseState(): Promise<void> {
-  try {
-    await unlink(statePath());
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
-    }
-  }
+  await removeRepositoryFile("rebaseState");
 }

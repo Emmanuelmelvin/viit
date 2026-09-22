@@ -23,6 +23,7 @@ viit rm [--cached] <file> [...files]
 viit reset [--soft|--mixed|--hard] <commit|branch|HEAD>
 viit restore [--staged] <file> [...files]
 viit mv <source> <destination>
+viit revert <commit|HEAD|--continue|--abort>
 viit add .
 viit status
 viit diff

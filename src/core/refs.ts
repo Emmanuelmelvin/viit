@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getViitDirectory } from "./repository.js";
+import {
+  readRepositoryFile,
+  writeRepositoryFile,
+} from "./repository-files.js";
 
 export function getRefPath(refName: string): string {
   if (!/^refs\/heads\/[A-Za-z0-9._/-]+$/.test(refName) || refName.includes("..")) {
@@ -18,7 +22,7 @@ export async function writeRef(refName: string, objectId: string): Promise<void>
 
 export async function writeHeadRef(refName: string): Promise<void> {
   getRefPath(refName);
-  await writeFile(path.join(getViitDirectory(), "HEAD"), `ref: ${refName}\n`);
+  await writeRepositoryFile("head", `ref: ${refName}\n`);
 }
 
 export async function readRef(refName: string): Promise<string> {
@@ -31,8 +35,11 @@ export async function readHead(): Promise<string> {
 }
 
 export async function readHeadRef(): Promise<string> {
-  const headPath = path.join(getViitDirectory(), "HEAD");
-  const head = (await readFile(headPath, "utf8")).trim();
+  const head = (await readRepositoryFile("head"))?.trim();
+
+  if (!head) {
+    throw new Error("HEAD does not exist");
+  }
 
   if (head.startsWith("ref: ")) {
     return head.slice("ref: ".length);

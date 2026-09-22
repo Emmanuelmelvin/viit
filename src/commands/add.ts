@@ -3,6 +3,7 @@ import { readdir, stat } from "node:fs/promises";
 import { readIndex, writeIndex } from "../core/index.js";
 import { markConflictsResolved, readMergeConflicts } from "../core/merge-state.js";
 import { markRebaseConflictsResolved, readRebaseState } from "../core/rebase-state.js";
+import { markRevertConflictsResolved, readRevertState } from "../core/revert-state.js";
 import { writeBlob } from "../core/objects.js";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".viit", "dist", "node_modules"]);
@@ -41,9 +42,11 @@ export async function addCommand(fileNames: string[]): Promise<void> {
   const files = new Set<string>();
   const mergeConflicts = await readMergeConflicts();
   const rebaseState = await readRebaseState();
+  const revertState = await readRevertState();
   const conflictPaths = new Set([
     ...mergeConflicts,
     ...(rebaseState?.conflicts ?? []),
+    ...(revertState?.conflicts ?? []),
   ]);
 
   for (const fileName of fileNames) {
@@ -86,4 +89,5 @@ export async function addCommand(fileNames: string[]): Promise<void> {
   await writeIndex(index);
   await markConflictsResolved(stagedPaths);
   await markRebaseConflictsResolved(stagedPaths);
+  await markRevertConflictsResolved(stagedPaths);
 }

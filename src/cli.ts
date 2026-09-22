@@ -14,6 +14,7 @@ import { mergeCommand } from "./commands/merge.js";
 import { mvCommand } from "./commands/mv.js";
 import { rebaseCommand } from "./commands/rebase.js";
 import { rmCommand } from "./commands/rm.js";
+import { revertCommand } from "./commands/revert.js";
 import { resetCommand } from "./commands/reset.js";
 import { restoreCommand } from "./commands/restore.js";
 import { statusCommand } from "./commands/status.js";
@@ -133,6 +134,18 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await mvCommand(args[1], args[2]);
+        break;
+      }
+
+      case "revert": {
+        const target = args[1];
+
+        if (!target) {
+          fail(command, "a commit ID, branch name, HEAD, --continue, or --abort is required");
+          break;
+        }
+
+        await revertCommand(target);
         break;
       }
 

@@ -4,6 +4,7 @@ import { readCommitTree } from "../core/commits.js";
 import { readIndex } from "../core/index.js";
 import { readMergeConflicts } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
+import { readRevertState } from "../core/revert-state.js";
 import { hashBlob } from "../core/objects.js";
 import { readHead, readHeadRef } from "../core/refs.js";
 import { readTree } from "../core/trees.js";
@@ -69,7 +70,8 @@ export async function statusCommand(): Promise<void> {
   const unstaged: string[] = [];
   const untracked: string[] = [];
   const rebaseState = await readRebaseState();
-  const conflicts = rebaseState?.conflicts ?? await readMergeConflicts();
+  const revertState = await readRevertState();
+  const conflicts = rebaseState?.conflicts ?? revertState?.conflicts ?? await readMergeConflicts();
 
   for (const [filePath, objectId] of Object.entries(index)) {
     if (!headTree[filePath]) {
@@ -103,6 +105,11 @@ export async function statusCommand(): Promise<void> {
 
   if (rebaseState) {
     console.log(`Rebase in progress: replaying commit ${rebaseState.commits[rebaseState.nextIndex]}`);
+    console.log();
+  }
+
+  if (revertState) {
+    console.log(`Revert in progress: reverting commit ${revertState.commitId}`);
     console.log();
   }
 

@@ -1,26 +1,12 @@
-import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { getViitDirectory } from "./repository.js";
+import { readRepositoryFile, writeRepositoryFile } from "./repository-files.js";
 
 export type Index = Record<string, string>;
 
-function getIndexPath(): string {
-  return path.join(getViitDirectory(), "index");
-}
-
 export async function readIndex(): Promise<Index> {
-  try {
-    const index = await readFile(getIndexPath(), "utf8");
-    return JSON.parse(index) as Index;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {};
-    }
-
-    throw error;
-  }
+  const index = await readRepositoryFile("index");
+  return index ? JSON.parse(index) as Index : {};
 }
 
 export async function writeIndex(index: Index): Promise<void> {
-  await writeFile(getIndexPath(), `${JSON.stringify(index, null, 2)}\n`);
+  await writeRepositoryFile("index", `${JSON.stringify(index, null, 2)}\n`);
 }

@@ -3,6 +3,7 @@ import path from "node:path";
 import { readIndex, writeIndex } from "../core/index.js";
 import { markConflictsResolved } from "../core/merge-state.js";
 import { markRebaseConflictsResolved } from "../core/rebase-state.js";
+import { markRevertConflictsResolved } from "../core/revert-state.js";
 import { hashBlob } from "../core/objects.js";
 
 function toIndexPath(fileName: string): string {
@@ -70,4 +71,5 @@ export async function rmCommand(fileNames: string[], cached = false): Promise<vo
   await writeIndex(index);
   await markConflictsResolved(indexPaths);
   await markRebaseConflictsResolved(indexPaths);
+  await markRevertConflictsResolved(indexPaths);
 }

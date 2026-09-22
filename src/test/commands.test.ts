@@ -8,14 +8,16 @@ import { commitCommand } from "../commands/commit.js";
 import { mergeCommand } from "../commands/merge.js";
 import { diffCommand } from "../commands/diff.js";
 import { mvCommand } from "../commands/mv.js";
+import { revertCommand } from "../commands/revert.js";
 import { rebaseCommand } from "../commands/rebase.js";
 import { rmCommand } from "../commands/rm.js";
 import { resetCommand } from "../commands/reset.js";
 import { restoreCommand } from "../commands/restore.js";
 import { switchCommand } from "../commands/switch.js";
-import { readCommitParents } from "../core/commits.js";
+import { readCommitMessage, readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
+import { readRevertState } from "../core/revert-state.js";
 import { readHead, readRef } from "../core/refs.js";
 import { readIndex } from "../core/index.js";
 import { captureOutput, commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
@@ -335,5 +337,62 @@ test("diff prints hunk ranges for working-tree changes", async () => {
     const output = await captureOutput(() => diffCommand(false));
     assert.match(output, /@@ -1,2 \+1,3 @@/);
     assert.match(output, /\+changed/);
+  });
+});
+
+test("revert creates a new commit that undoes a commit", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "initial\n", "initial");
+    await commitFile("note.txt", "changed\n", "change");
+    const changedCommit = await readHead();
+
+    await quiet(() => revertCommand(changedCommit));
+
+    const revertCommit = await readHead();
+    assert.notEqual(revertCommit, changedCommit);
+    assert.deepEqual(await readCommitParents(revertCommit), [changedCommit]);
+    assert.equal(await readCommitMessage(revertCommit), 'Revert "change"');
+    assert.equal(await readFile("note.txt", "utf8"), "initial\n");
+  });
+});
+
+test("revert can continue after a conflict", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "initial\n", "initial");
+    await commitFile("note.txt", "target\n", "target");
+    const targetCommit = await readHead();
+    await commitFile("note.txt", "later\n", "later");
+    const originalHead = await readHead();
+
+    await quiet(() => revertCommand(targetCommit));
+
+    assert.equal((await readRevertState())?.conflicts.length, 1);
+    assert.match(await readFile("note.txt", "utf8"), /<<<<<<< HEAD/);
+
+    await setFile("note.txt", "resolved\n");
+    await quiet(() => addCommand(["note.txt"]));
+    await quiet(() => revertCommand("--continue"));
+
+    const revertCommit = await readHead();
+    assert.deepEqual(await readCommitParents(revertCommit), [originalHead]);
+    assert.equal(await readRevertState(), undefined);
+    assert.equal(await readFile("note.txt", "utf8"), "resolved\n");
+  });
+});
+
+test("revert abort restores the original commit", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "initial\n", "initial");
+    await commitFile("note.txt", "target\n", "target");
+    const targetCommit = await readHead();
+    await commitFile("note.txt", "later\n", "later");
+    const originalHead = await readHead();
+
+    await quiet(() => revertCommand(targetCommit));
+    await quiet(() => revertCommand("--abort"));
+
+    assert.equal(await readHead(), originalHead);
+    assert.equal(await readRevertState(), undefined);
+    assert.equal(await readFile("note.txt", "utf8"), "later\n");
   });
 });
