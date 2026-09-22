@@ -15,30 +15,14 @@ import {
   type RevertState,
   writeRevertState,
 } from "../core/revert-state.js";
-import { readHead, readHeadRef, readRef, writeRef } from "../core/refs.js";
+import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { readRebaseState } from "../core/rebase-state.js";
 import { readTree, writeTree } from "../core/trees.js";
 import { assertCleanWorktree } from "../core/worktree.js";
 import { restoreCommit, restoreTree } from "./checkout.js";
+import { resolveRevision } from "../core/revisions.js";
 
 type Tree = Record<string, string>;
-const HASH_PATTERN = /^[0-9a-f]{40}$/;
-
-async function resolveTarget(target: string): Promise<string> {
-  if (target === "HEAD") {
-    return readHead();
-  }
-
-  if (HASH_PATTERN.test(target)) {
-    return target;
-  }
-
-  if (/^[A-Za-z0-9._-]+$/.test(target)) {
-    return readRef(`refs/heads/${target}`);
-  }
-
-  throw new Error(`'${target}' is not a valid commit ID or branch name`);
-}
 
 async function readBlob(objectId: string | undefined): Promise<string> {
   if (!objectId) {
@@ -174,7 +158,7 @@ export async function revertCommand(target: string): Promise<void> {
   }
 
   await assertCleanWorktree("revert");
-  const targetId = await resolveTarget(target);
+  const targetId = await resolveRevision(target);
   const targetParents = await readCommitParents(targetId);
 
   if (targetParents.length > 1) {

@@ -6,8 +6,8 @@ import { readHeadRef, writeRef } from "../core/refs.js";
 import { readCommitTree } from "../core/commits.js";
 import { readTree } from "../core/trees.js";
 import { assertCleanWorktree } from "../core/worktree.js";
-
-const HASH_PATTERN = /^[0-9a-f]{40}$/;
+import { HASH_PATTERN } from "../core/config.js";
+import { resolveRevision } from "../core/revisions.js";
 
 export async function restoreTree(targetIndex: Record<string, string>): Promise<void> {
   const currentIndex = await readIndex();
@@ -50,9 +50,10 @@ export async function restoreCommit(commitId: string): Promise<void> {
   await restoreTree(await readTree(treeId));
 }
 
-export async function checkoutCommand(commitId: string): Promise<void> {
+export async function checkoutCommand(revision: string): Promise<void> {
   await assertCleanWorktree("checkout");
+  const commitId = await resolveRevision(revision);
   await restoreCommit(commitId);
   await writeRef(await readHeadRef(), commitId);
-  console.log(`Checked out ${commitId}`);
+  console.log(`Checked out ${revision} (${commitId})`);
 }

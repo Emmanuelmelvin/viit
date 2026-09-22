@@ -20,17 +20,18 @@ Viit uses `.viit/` for its repository metadata so it does not interfere with a n
 viit init
 viit add <file> [...files]
 viit rm [--cached] <file> [...files]
-viit reset [--soft|--mixed|--hard] <commit|branch|HEAD>
+viit reset [--soft|--mixed|--hard] <commit|branch|tag|HEAD>
 viit restore [--staged] <file> [...files]
 viit mv <source> <destination>
-viit revert <commit|HEAD|--continue|--abort>
+viit revert <commit|branch|tag|HEAD|--continue|--abort>
+viit tag [-d <name> | -a <name> -m <message> | <name>]
 viit add .
 viit status
 viit diff
 viit diff --cached
 viit commit -m "Commit message"
 viit log
-viit checkout <commit-id>
+viit checkout <commit|branch|tag|HEAD>
 viit branch [name]
 viit switch <branch>
 viit merge <branch|--abort>

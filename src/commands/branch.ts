@@ -2,9 +2,10 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { getViitDirectory } from "../core/repository.js";
 import { readHead, readHeadRef, readRef, writeRef } from "../core/refs.js";
+import { NAME_PATTERN } from "../core/config.js";
 
 function branchRef(name: string): string {
-  if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+  if (!NAME_PATTERN.test(name)) {
     throw new Error("Branch names may contain letters, numbers, dots, underscores, and hyphens");
   }
 

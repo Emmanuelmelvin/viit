@@ -19,6 +19,7 @@ import { resetCommand } from "./commands/reset.js";
 import { restoreCommand } from "./commands/restore.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
+import { tagCommand } from "./commands/tag.js";
 import { updateRefCommand } from "./commands/update-ref.js";
 import { writeTreeCommand } from "./commands/write-tree.js";
 import { COMMANDS, fail, printHelp, suggestCommand } from "./cli/help.js";
@@ -151,6 +152,10 @@ if (!command || command === "--help" || command === "-h") {
 
       case "branch":
         await branchCommand(args[1]);
+        break;
+
+      case "tag":
+        await tagCommand(args.slice(1));
         break;
 
       case "switch": {

@@ -1,15 +1,6 @@
 import { readObject, writeObject } from "./objects.js";
-
-const HASH_PATTERN = /^[0-9a-f]{40}$/;
-
-function getTimezoneOffset(date: Date): string {
-  const offset = -date.getTimezoneOffset();
-  const sign = offset >= 0 ? "+" : "-";
-  const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, "0");
-  const minutes = (Math.abs(offset) % 60).toString().padStart(2, "0");
-
-  return `${sign}${hours}${minutes}`;
-}
+import { HASH_PATTERN } from "./config.js";
+import { getIdentity } from "./identity.js";
 
 export async function writeCommit(
   treeId: string,
@@ -30,12 +21,7 @@ export async function writeCommit(
     throw new Error("Parent IDs must be 40-character SHA-1 hashes");
   }
 
-  const name = process.env.VIIT_AUTHOR_NAME ?? "Viit User";
-  const email = process.env.VIIT_AUTHOR_EMAIL ?? "viit@example.com";
-  const now = new Date();
-  const timestamp = Math.floor(now.getTime() / 1000);
-  const timezone = getTimezoneOffset(now);
-  const identity = `${name} <${email}> ${timestamp} ${timezone}`;
+  const identity = getIdentity();
   const headers = [`tree ${treeId}`];
 
   headers.push(...parents.map((parentId) => `parent ${parentId}`));

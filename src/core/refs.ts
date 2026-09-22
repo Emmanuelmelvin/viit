@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { REF_PATTERN } from "./config.js";
 import { getViitDirectory } from "./repository.js";
 import {
   readRepositoryFile,
@@ -7,8 +8,8 @@ import {
 } from "./repository-files.js";
 
 export function getRefPath(refName: string): string {
-  if (!/^refs\/heads\/[A-Za-z0-9._/-]+$/.test(refName) || refName.includes("..")) {
-    throw new Error("Only local branch refs are supported");
+  if (!REF_PATTERN.test(refName) || refName.includes("..")) {
+    throw new Error("Only local branch and tag refs are supported");
   }
 
   return path.join(getViitDirectory(), refName);
@@ -27,6 +28,16 @@ export async function writeHeadRef(refName: string): Promise<void> {
 
 export async function readRef(refName: string): Promise<string> {
   return (await readFile(getRefPath(refName), "utf8")).trim();
+}
+
+export async function removeRef(refName: string): Promise<void> {
+  try {
+    await unlink(getRefPath(refName));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 export async function readHead(): Promise<string> {

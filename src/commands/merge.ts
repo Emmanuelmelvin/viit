@@ -13,10 +13,11 @@ import { readObject } from "../core/objects.js";
 import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { readTree, writeTree } from "../core/trees.js";
 import { assertCleanWorktree } from "../core/worktree.js";
+import { NAME_PATTERN } from "../core/config.js";
 import { restoreCommit } from "./checkout.js";
 
 function branchRef(name: string): string {
-  if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+  if (!NAME_PATTERN.test(name)) {
     throw new Error("Branch names may contain letters, numbers, dots, underscores, and hyphens");
   }
 

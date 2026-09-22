@@ -1,6 +1,5 @@
 import path from "node:path";
-
-const VIIT_DIRECTORY = ".viit";
+import { VIIT_DIRECTORY } from "./config.js";
 
 export function getViitDirectory(): string {
   return path.resolve(process.cwd(), VIIT_DIRECTORY);

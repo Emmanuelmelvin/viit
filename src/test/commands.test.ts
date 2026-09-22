@@ -14,11 +14,14 @@ import { rmCommand } from "../commands/rm.js";
 import { resetCommand } from "../commands/reset.js";
 import { restoreCommand } from "../commands/restore.js";
 import { switchCommand } from "../commands/switch.js";
+import { tagCommand } from "../commands/tag.js";
 import { readCommitMessage, readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
 import { readRevertState } from "../core/revert-state.js";
+import { resolveRevision } from "../core/revisions.js";
 import { readHead, readRef } from "../core/refs.js";
+import { readTag } from "../core/tags.js";
 import { readIndex } from "../core/index.js";
 import { captureOutput, commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
 
@@ -186,6 +189,53 @@ test("checkout refuses to overwrite dirty files", async () => {
       checkoutCommand(firstCommit),
       /Cannot checkout: 'note.txt' has unstaged changes/,
     );
+  });
+});
+
+test("lightweight tags point to commits and can be listed or deleted", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "content\n", "initial");
+    const commitId = await readHead();
+
+    await quiet(() => tagCommand(["v1.0"]));
+
+    assert.equal(await readRef("refs/tags/v1.0"), commitId);
+    assert.equal(await resolveRevision("v1.0"), commitId);
+    assert.match(await captureOutput(() => tagCommand([])), /v1\.0/);
+
+    await quiet(() => tagCommand(["-d", "v1.0"]));
+    await assert.rejects(readRef("refs/tags/v1.0"), { code: "ENOENT" });
+  });
+});
+
+test("annotated tags point to tag objects and resolve to commits", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "content\n", "initial");
+    const commitId = await readHead();
+
+    await quiet(() => tagCommand(["-a", "v2.0", "-m", "release"]));
+
+    const tagObjectId = await readRef("refs/tags/v2.0");
+    const tag = await readTag(tagObjectId);
+    assert.equal(tag.objectId, commitId);
+    assert.equal(tag.objectType, "commit");
+    assert.equal(tag.name, "v2.0");
+    assert.equal(tag.message, "release");
+    assert.equal(await resolveRevision("v2.0"), commitId);
+  });
+});
+
+test("commit revisions can be resolved through tags by reset", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "first\n", "first");
+    await quiet(() => tagCommand(["stable"]));
+    const taggedCommit = await readHead();
+    await commitFile("note.txt", "second\n", "second");
+
+    await quiet(() => resetCommand("stable", "hard"));
+
+    assert.equal(await readHead(), taggedCommit);
+    assert.equal(await readFile("note.txt", "utf8"), "first\n");
   });
 });
 

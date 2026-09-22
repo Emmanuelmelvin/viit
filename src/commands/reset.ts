@@ -2,27 +2,10 @@ import { writeIndex } from "../core/index.js";
 import { readMergeHead } from "../core/merge-state.js";
 import { readCommitTree } from "../core/commits.js";
 import { readRebaseState } from "../core/rebase-state.js";
-import { readHead, readHeadRef, readRef, writeRef } from "../core/refs.js";
+import { readHeadRef, writeRef } from "../core/refs.js";
 import { readTree } from "../core/trees.js";
 import { restoreCommit } from "./checkout.js";
-
-const HASH_PATTERN = /^[0-9a-f]{40}$/;
-
-async function resolveTarget(target: string): Promise<string> {
-  if (target === "HEAD") {
-    return readHead();
-  }
-
-  if (HASH_PATTERN.test(target)) {
-    return target;
-  }
-
-  if (/^[A-Za-z0-9._-]+$/.test(target)) {
-    return readRef(`refs/heads/${target}`);
-  }
-
-  throw new Error(`'${target}' is not a valid commit ID or branch name`);
-}
+import { resolveRevision } from "../core/revisions.js";
 
 export async function resetCommand(
   target: string,
@@ -32,7 +15,7 @@ export async function resetCommand(
     throw new Error("Cannot reset while a merge or rebase is in progress");
   }
 
-  const targetId = await resolveTarget(target);
+  const targetId = await resolveRevision(target);
   const targetTreeId = await readCommitTree(targetId);
   const targetTree = await readTree(targetTreeId);
   const currentRef = await readHeadRef();
