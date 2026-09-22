@@ -6,6 +6,8 @@ import { branchCommand } from "../commands/branch.js";
 import { checkoutCommand } from "../commands/checkout.js";
 import { commitCommand } from "../commands/commit.js";
 import { mergeCommand } from "../commands/merge.js";
+import { diffCommand } from "../commands/diff.js";
+import { mvCommand } from "../commands/mv.js";
 import { rebaseCommand } from "../commands/rebase.js";
 import { rmCommand } from "../commands/rm.js";
 import { resetCommand } from "../commands/reset.js";
@@ -16,7 +18,7 @@ import { readMergeHead } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
 import { readHead, readRef } from "../core/refs.js";
 import { readIndex } from "../core/index.js";
-import { commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
+import { captureOutput, commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
 
 test("switch refuses to overwrite dirty files", async () => {
   await withRepository(async () => {
@@ -294,5 +296,44 @@ test("restore --staged resets the index from HEAD", async () => {
     assert.equal(await readFile("note.txt", "utf8"), "changed\n");
     assert.equal(Object.keys(await readIndex()).length, 1);
     assert.equal((await readIndex())["note.txt"] !== undefined, true);
+  });
+});
+
+test("mv moves a tracked file and stages the rename", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "content\n", "initial");
+
+    await quiet(() => mvCommand("note.txt", "renamed.txt"));
+
+    await assert.rejects(readFile("note.txt"));
+    assert.equal(await readFile("renamed.txt", "utf8"), "content\n");
+    const output = await captureOutput(() => diffCommand(true));
+    assert.match(output, /rename from note\.txt/);
+    assert.match(output, /rename to renamed\.txt/);
+  });
+});
+
+test("mv refuses modified, missing, and existing destinations", async () => {
+  await withRepository(async () => {
+    await assert.rejects(mvCommand("missing.txt", "new.txt"), /did not match/);
+    await commitFile("note.txt", "content\n", "initial");
+    await setFile("note.txt", "changed\n");
+
+    await assert.rejects(mvCommand("note.txt", "new.txt"), /has changes/);
+
+    await setFile("note.txt", "content\n");
+    await setFile("new.txt", "existing\n");
+    await assert.rejects(mvCommand("note.txt", "new.txt"), /already exists/);
+  });
+});
+
+test("diff prints hunk ranges for working-tree changes", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "one\ntwo\n", "initial");
+    await setFile("note.txt", "one\nchanged\ntwo\n");
+
+    const output = await captureOutput(() => diffCommand(false));
+    assert.match(output, /@@ -1,2 \+1,3 @@/);
+    assert.match(output, /\+changed/);
   });
 });

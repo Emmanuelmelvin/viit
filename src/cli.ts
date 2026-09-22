@@ -11,6 +11,7 @@ import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
+import { mvCommand } from "./commands/mv.js";
 import { rebaseCommand } from "./commands/rebase.js";
 import { rmCommand } from "./commands/rm.js";
 import { resetCommand } from "./commands/reset.js";
@@ -122,6 +123,16 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await restoreCommand(fileNames, staged);
+        break;
+      }
+
+      case "mv": {
+        if (!args[1] || !args[2] || args.length > 3) {
+          fail(command, "a source and destination path are required");
+          break;
+        }
+
+        await mvCommand(args[1], args[2]);
         break;
       }
 

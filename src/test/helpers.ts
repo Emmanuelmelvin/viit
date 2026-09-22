@@ -21,6 +21,19 @@ export async function quiet<T>(action: () => Promise<T>): Promise<T> {
   }
 }
 
+export async function captureOutput(action: () => Promise<void>): Promise<string> {
+  const originalLog = console.log;
+  const output: string[] = [];
+  console.log = (...values: unknown[]) => output.push(values.join(" "));
+
+  try {
+    await action();
+    return output.join("\n");
+  } finally {
+    console.log = originalLog;
+  }
+}
+
 export async function withRepository(
   action: (directory: string) => Promise<void>,
 ): Promise<void> {

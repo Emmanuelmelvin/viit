@@ -6,12 +6,17 @@ import { readObject } from "../core/objects.js";
 import { readHead } from "../core/refs.js";
 import { readTree } from "../core/trees.js";
 
+type DiffLine = {
+  marker: " " | "+" | "-";
+  content: string;
+};
+
 function lines(content: Buffer): string[] {
   const result = content.toString().split(/\r?\n/);
   return result.at(-1) === "" ? result.slice(0, -1) : result;
 }
 
-function compareLines(oldLines: string[], newLines: string[]): string[] {
+function compareLines(oldLines: string[], newLines: string[]): DiffLine[] {
   const lengths = Array.from({ length: oldLines.length + 1 }, () =>
     Array<number>(newLines.length + 1).fill(0),
   );
@@ -24,7 +29,7 @@ function compareLines(oldLines: string[], newLines: string[]): string[] {
     }
   }
 
-  const output: string[] = [];
+  const output: DiffLine[] = [];
   let oldIndex = 0;
   let newIndex = 0;
 
@@ -34,7 +39,7 @@ function compareLines(oldLines: string[], newLines: string[]): string[] {
       newIndex < newLines.length &&
       oldLines[oldIndex] === newLines[newIndex]
     ) {
-      output.push(` ${oldLines[oldIndex]}`);
+      output.push({ marker: " ", content: oldLines[oldIndex] });
       oldIndex += 1;
       newIndex += 1;
     } else if (
@@ -42,10 +47,10 @@ function compareLines(oldLines: string[], newLines: string[]): string[] {
       (newIndex === newLines.length ||
         lengths[oldIndex + 1][newIndex] >= lengths[oldIndex][newIndex + 1])
     ) {
-      output.push(`-${oldLines[oldIndex]}`);
+      output.push({ marker: "-", content: oldLines[oldIndex] });
       oldIndex += 1;
     } else {
-      output.push(`+${newLines[newIndex]}`);
+      output.push({ marker: "+", content: newLines[newIndex] });
       newIndex += 1;
     }
   }
@@ -66,8 +71,7 @@ async function readBlob(objectId: string): Promise<Buffer> {
 async function readHeadTree(): Promise<Record<string, string>> {
   try {
     const commitId = await readHead();
-    const treeId = await readCommitTree(commitId);
-    return readTree(treeId);
+    return readTree(await readCommitTree(commitId));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return {};
@@ -77,8 +81,19 @@ async function readHeadTree(): Promise<Record<string, string>> {
   }
 }
 
+function printHunk(oldLines: string[], newLines: string[], diffLines: DiffLine[]): void {
+  const oldStart = oldLines.length === 0 ? 0 : 1;
+  const newStart = newLines.length === 0 ? 0 : 1;
+  console.log(`@@ -${oldStart},${oldLines.length} +${newStart},${newLines.length} @@`);
+
+  for (const line of diffLines) {
+    console.log(`${line.marker}${line.content}`);
+  }
+}
+
 async function printFileDiff(
-  filePath: string,
+  oldPath: string,
+  newPath: string,
   oldObjectId: string | undefined,
   newObjectId: string | undefined,
   newFileContent?: Buffer,
@@ -92,13 +107,62 @@ async function printFileDiff(
     return;
   }
 
-  console.log(`diff --viit a/${filePath} b/${filePath}`);
-  console.log(`--- a/${filePath}`);
-  console.log(`+++ b/${filePath}`);
-  console.log("@@");
+  console.log(`diff --viit a/${oldPath} b/${newPath}`);
 
-  for (const line of compareLines(lines(oldContent), lines(newContent))) {
-    console.log(line);
+  if (oldContent.includes(0) || newContent.includes(0)) {
+    console.log(`Binary files a/${oldPath} and b/${newPath} differ`);
+    return;
+  }
+
+  console.log(`--- ${oldObjectId ? `a/${oldPath}` : "/dev/null"}`);
+  console.log(`+++ ${newObjectId || newFileContent ? `b/${newPath}` : "/dev/null"}`);
+  printHunk(lines(oldContent), lines(newContent), compareLines(lines(oldContent), lines(newContent)));
+}
+
+function printRename(oldPath: string, newPath: string): void {
+  console.log(`diff --viit a/${oldPath} b/${newPath}`);
+  console.log("similarity index 100%");
+  console.log(`rename from ${oldPath}`);
+  console.log(`rename to ${newPath}`);
+}
+
+async function printCachedDiff(
+  headTree: Record<string, string>,
+  index: Record<string, string>,
+): Promise<void> {
+  const deleted = new Set(Object.keys(headTree).filter((filePath) => !index[filePath]));
+  const added = new Set(Object.keys(index).filter((filePath) => !headTree[filePath]));
+  const renamed = new Set<string>();
+
+  for (const oldPath of [...deleted].sort()) {
+    const newPath = [...added].find((filePath) => index[filePath] === headTree[oldPath]);
+
+    if (!newPath) {
+      continue;
+    }
+
+    deleted.delete(oldPath);
+    added.delete(newPath);
+    renamed.add(oldPath);
+    renamed.add(newPath);
+    printRename(oldPath, newPath);
+  }
+
+  const filePaths = new Set([
+    ...Object.keys(headTree),
+    ...Object.keys(index),
+  ]);
+
+  for (const filePath of [...filePaths].sort()) {
+    if (renamed.has(filePath)) {
+      continue;
+    }
+
+    if (!deleted.has(filePath) && !added.has(filePath) && !headTree[filePath] && !index[filePath]) {
+      continue;
+    }
+
+    await printFileDiff(filePath, filePath, headTree[filePath], index[filePath]);
   }
 }
 
@@ -106,13 +170,7 @@ export async function diffCommand(cached: boolean): Promise<void> {
   const index = await readIndex();
 
   if (cached) {
-    const headTree = await readHeadTree();
-    const filePaths = new Set([...Object.keys(headTree), ...Object.keys(index)]);
-
-    for (const filePath of [...filePaths].sort()) {
-      await printFileDiff(filePath, headTree[filePath], index[filePath]);
-    }
-
+    await printCachedDiff(await readHeadTree(), index);
     return;
   }
 
@@ -129,6 +187,6 @@ export async function diffCommand(cached: boolean): Promise<void> {
       }
     }
 
-    await printFileDiff(filePath, objectId, undefined, currentContent);
+    await printFileDiff(filePath, filePath, objectId, undefined, currentContent);
   }
 }
