@@ -1,6 +1,7 @@
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { REF_PATTERN } from "./config.js";
+import { appendReflog, EMPTY_OBJECT_ID } from "./reflog.js";
 import { getViitDirectory } from "./repository.js";
 import {
   readRepositoryFile,
@@ -15,15 +16,52 @@ export function getRefPath(refName: string): string {
   return path.join(getViitDirectory(), refName);
 }
 
-export async function writeRef(refName: string, objectId: string): Promise<void> {
-  const refPath = getRefPath(refName);
-  await mkdir(path.dirname(refPath), { recursive: true });
-  await writeFile(refPath, `${objectId}\n`);
+async function readRefOrEmpty(refPath: string): Promise<string> {
+  try {
+    return (await readFile(refPath, "utf8")).trim() || EMPTY_OBJECT_ID;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return EMPTY_OBJECT_ID;
+    }
+
+    throw error;
+  }
 }
 
-export async function writeHeadRef(refName: string): Promise<void> {
+export async function writeRef(
+  refName: string,
+  objectId: string,
+  action = "update",
+): Promise<void> {
+  const refPath = getRefPath(refName);
+  const oldId = await readRefOrEmpty(refPath);
+  await mkdir(path.dirname(refPath), { recursive: true });
+  await writeFile(refPath, `${objectId}\n`);
+
+  if (refName.startsWith("refs/heads/")) {
+    await appendReflog(refName, oldId, objectId, action);
+
+    try {
+      if (await readHeadRef() === refName) {
+        await appendReflog("HEAD", oldId, objectId, action);
+      }
+    } catch (error) {
+      if ((error as Error).message !== "HEAD does not exist") {
+        throw error;
+      }
+    }
+  }
+}
+
+export async function writeHeadRef(refName: string, action = "checkout"): Promise<void> {
   getRefPath(refName);
+  const oldId = await readHead().catch(() => EMPTY_OBJECT_ID);
+  const newId = await readRefOrEmpty(getRefPath(refName));
   await writeRepositoryFile("head", `ref: ${refName}\n`);
+
+  if (oldId !== EMPTY_OBJECT_ID || newId !== EMPTY_OBJECT_ID) {
+    await appendReflog("HEAD", oldId, newId, action);
+  }
 }
 
 export async function readRef(refName: string): Promise<string> {

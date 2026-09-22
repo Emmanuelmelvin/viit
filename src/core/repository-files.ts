@@ -5,6 +5,8 @@ import { getViitDirectory } from "./repository.js";
 export const REPOSITORY_PATHS = {
   objects: "objects",
   refs: "refs",
+  config: "config",
+  description: "description",
   head: "HEAD",
   index: "index",
   mergeHead: "MERGE_HEAD",

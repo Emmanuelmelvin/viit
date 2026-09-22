@@ -1,3 +1,5 @@
+import { readConfigValue } from "./repository-config.js";
+
 function getTimezoneOffset(date: Date): string {
   const offset = -date.getTimezoneOffset();
   const sign = offset >= 0 ? "+" : "-";
@@ -7,9 +9,13 @@ function getTimezoneOffset(date: Date): string {
   return `${sign}${hours}${minutes}`;
 }
 
-export function getIdentity(): string {
-  const name = process.env.VIIT_AUTHOR_NAME ?? "Viit User";
-  const email = process.env.VIIT_AUTHOR_EMAIL ?? "viit@example.com";
+export async function getIdentity(): Promise<string> {
+  const name = process.env.VIIT_AUTHOR_NAME
+    ?? await readConfigValue("user.name")
+    ?? "Viit User";
+  const email = process.env.VIIT_AUTHOR_EMAIL
+    ?? await readConfigValue("user.email")
+    ?? "viit@example.com";
   const now = new Date();
   const timestamp = Math.floor(now.getTime() / 1000);
 

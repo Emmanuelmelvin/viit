@@ -121,7 +121,7 @@ async function collectCommits(currentId: string, baseId: string): Promise<string
 async function replayNext(state: RebaseState): Promise<void> {
   if (state.nextIndex >= state.commits.length) {
     await restoreCommit(state.currentParent);
-    await writeRef(state.branchRef, state.currentParent);
+    await writeRef(state.branchRef, state.currentParent, "rebase: complete");
     await clearRebaseState();
     console.log(`Rebase complete at ${state.currentParent}`);
     return;
@@ -211,7 +211,7 @@ async function abortRebase(): Promise<void> {
   }
 
   await restoreCommit(state.originalHead);
-  await writeRef(state.branchRef, state.originalHead);
+  await writeRef(state.branchRef, state.originalHead, "rebase: abort");
   await clearRebaseState();
   console.log("Rebase aborted");
 }
@@ -261,7 +261,7 @@ export async function rebaseCommand(target: string): Promise<void> {
 
   if (baseId === currentId) {
     await restoreCommit(targetId);
-    await writeRef(currentRef, targetId);
+    await writeRef(currentRef, targetId, `rebase: fast-forward ${target}`);
     console.log(`Fast-forwarded ${currentRef.slice("refs/heads/".length)} to ${targetId}`);
     return;
   }

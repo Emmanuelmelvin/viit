@@ -116,7 +116,7 @@ async function continueRevert(): Promise<void> {
     `Revert "${await readCommitMessage(state.commitId)}"`,
   );
 
-  await writeRef(state.branchRef, commitId);
+  await writeRef(state.branchRef, commitId, "revert: continue");
   await clearRevertState();
   console.log(`Revert complete at ${commitId}`);
 }
@@ -129,7 +129,7 @@ async function abortRevert(): Promise<void> {
   }
 
   await restoreCommit(state.originalHead);
-  await writeRef(state.branchRef, state.originalHead);
+  await writeRef(state.branchRef, state.originalHead, "revert: abort");
   await clearRevertState();
   console.log("Revert aborted");
 }
@@ -201,6 +201,6 @@ export async function revertCommand(target: string): Promise<void> {
     `Revert "${await readCommitMessage(targetId)}"`,
   );
 
-  await writeRef(currentRef, commitId);
+  await writeRef(currentRef, commitId, `revert: ${target}`);
   console.log(`Reverted ${targetId} in commit ${commitId}`);
 }

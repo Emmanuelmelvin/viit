@@ -118,7 +118,7 @@ export async function mergeCommand(targetBranch: string): Promise<void> {
 
   if (await isAncestor(currentId, targetId)) {
     await restoreCommit(targetId);
-    await writeRef(currentRef, targetId);
+    await writeRef(currentRef, targetId, `merge: fast-forward ${targetBranch}`);
     console.log(`Fast-forwarded ${currentRef.slice("refs/heads/".length)} to ${targetId}`);
     return;
   }
@@ -147,7 +147,7 @@ export async function mergeCommand(targetBranch: string): Promise<void> {
   );
 
   await restoreCommit(mergeCommitId);
-  await writeRef(currentRef, mergeCommitId);
+  await writeRef(currentRef, mergeCommitId, `merge: ${targetBranch}`);
   console.log(`Merged ${targetBranch} in commit ${mergeCommitId}`);
 }
 
@@ -160,7 +160,7 @@ async function abortMerge(): Promise<void> {
 
   const currentRef = await readHeadRef();
   await restoreCommit(originalHead);
-  await writeRef(currentRef, originalHead);
+  await writeRef(currentRef, originalHead, "merge: abort");
   await clearMergeState();
   console.log("Merge aborted");
 }

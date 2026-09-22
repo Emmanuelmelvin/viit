@@ -12,6 +12,14 @@ export async function initCommand(): Promise<void> {
 
   // HEAD records the branch currently checked out.
   await writeRepositoryFile("head", "ref: refs/heads/main\n");
+  await writeRepositoryFile(
+    "config",
+    "[core]\n\trepositoryformatversion = 0\n\tbare = false\n",
+  );
+  await writeRepositoryFile(
+    "description",
+    "Unnamed repository; edit this file to name it for Viit tools.\n",
+  );
 
   console.log(`Initialized empty Viit repository in ${viitDirectory}`);
 }

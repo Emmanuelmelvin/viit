@@ -54,6 +54,6 @@ export async function checkoutCommand(revision: string): Promise<void> {
   await assertCleanWorktree("checkout");
   const commitId = await resolveRevision(revision);
   await restoreCommit(commitId);
-  await writeRef(await readHeadRef(), commitId);
+  await writeRef(await readHeadRef(), commitId, `checkout: ${revision}`);
   console.log(`Checked out ${revision} (${commitId})`);
 }

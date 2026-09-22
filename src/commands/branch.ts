@@ -25,7 +25,7 @@ export async function branchCommand(name?: string): Promise<void> {
       }
     }
 
-    await writeRef(refName, await readHead());
+    await writeRef(refName, await readHead(), `branch: created ${name}`);
     console.log(`Created branch ${name}`);
     return;
   }

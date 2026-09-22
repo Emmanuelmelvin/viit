@@ -21,13 +21,13 @@ export async function resetCommand(
   const currentRef = await readHeadRef();
 
   if (mode === "soft") {
-    await writeRef(currentRef, targetId);
+    await writeRef(currentRef, targetId, `reset: ${mode}`);
   } else if (mode === "mixed") {
     await writeIndex(targetTree);
-    await writeRef(currentRef, targetId);
+    await writeRef(currentRef, targetId, `reset: ${mode}`);
   } else {
     await restoreCommit(targetId);
-    await writeRef(currentRef, targetId);
+    await writeRef(currentRef, targetId, `reset: ${mode}`);
   }
 
   console.log(`Reset ${currentRef.slice("refs/heads/".length)} to ${targetId} (${mode})`);

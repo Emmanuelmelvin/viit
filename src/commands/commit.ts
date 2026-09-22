@@ -26,7 +26,7 @@ export async function commitCommand(message: string): Promise<void> {
 
   const parents = mergeHead && parentId ? [parentId, mergeHead] : parentId;
   const commitId = await writeCommit(treeId, parents, message);
-  await writeRef(refName, commitId);
+  await writeRef(refName, commitId, `commit: ${message}`);
   await clearMergeState();
   console.log(commitId);
 }

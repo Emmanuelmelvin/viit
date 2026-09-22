@@ -17,6 +17,6 @@ export async function switchCommand(name: string): Promise<void> {
 
   await assertCleanWorktree("switch branches");
   await restoreCommit(commitId);
-  await writeHeadRef(refName);
+  await writeHeadRef(refName, `checkout: moving to ${name}`);
   console.log(`Switched to branch ${name}`);
 }

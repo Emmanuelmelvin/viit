@@ -5,11 +5,14 @@ import { addCommand } from "../commands/add.js";
 import { branchCommand } from "../commands/branch.js";
 import { checkoutCommand } from "../commands/checkout.js";
 import { commitCommand } from "../commands/commit.js";
+import { configCommand } from "../commands/config.js";
+import { descriptionCommand } from "../commands/description.js";
 import { mergeCommand } from "../commands/merge.js";
 import { diffCommand } from "../commands/diff.js";
 import { mvCommand } from "../commands/mv.js";
 import { revertCommand } from "../commands/revert.js";
 import { rebaseCommand } from "../commands/rebase.js";
+import { reflogCommand } from "../commands/reflog.js";
 import { rmCommand } from "../commands/rm.js";
 import { resetCommand } from "../commands/reset.js";
 import { restoreCommand } from "../commands/restore.js";
@@ -19,6 +22,8 @@ import { readCommitMessage, readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
 import { readRevertState } from "../core/revert-state.js";
+import { readReflog } from "../core/reflog.js";
+import { readRepositoryFile } from "../core/repository-files.js";
 import { resolveRevision } from "../core/revisions.js";
 import { readHead, readRef } from "../core/refs.js";
 import { readTag } from "../core/tags.js";
@@ -236,6 +241,42 @@ test("commit revisions can be resolved through tags by reset", async () => {
 
     assert.equal(await readHead(), taggedCommit);
     assert.equal(await readFile("note.txt", "utf8"), "first\n");
+  });
+});
+
+test("reflog records branch and HEAD movements", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "first\n", "first");
+    const firstCommit = await readHead();
+    let entries = await readReflog("HEAD");
+
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].oldId, "0".repeat(40));
+    assert.equal(entries[0].newId, firstCommit);
+    assert.equal(entries[0].action, "commit: first");
+
+    await commitFile("note.txt", "second\n", "second");
+    entries = await readReflog("HEAD");
+    assert.equal(entries.length, 2);
+    assert.equal(entries[0].action, "commit: second");
+    assert.equal(entries[0].oldId, firstCommit);
+    assert.match(await captureOutput(() => reflogCommand()), /HEAD@\{0\}/);
+  });
+});
+
+test("config and description are stored in repository metadata", async () => {
+  await withRepository(async () => {
+    await quiet(() => configCommand(["user.name", "Ada Lovelace"]));
+    await quiet(() => configCommand(["user.email", "ada@example.com"]));
+
+    assert.equal(await captureOutput(() => configCommand(["--get", "user.name"])), "Ada Lovelace");
+    assert.match(await readRepositoryFile("config") ?? "", /\[user\]/);
+
+    await quiet(() => descriptionCommand("A repository for learning Git internals"));
+    assert.equal(
+      await readRepositoryFile("description"),
+      "A repository for learning Git internals\n",
+    );
   });
 });
 

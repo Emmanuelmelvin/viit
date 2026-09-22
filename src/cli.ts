@@ -6,6 +6,8 @@ import { catFileCommand } from "./commands/cat-file.js";
 import { checkoutCommand } from "./commands/checkout.js";
 import { commitCommand } from "./commands/commit.js";
 import { commitTreeCommand } from "./commands/commit-tree.js";
+import { configCommand } from "./commands/config.js";
+import { descriptionCommand } from "./commands/description.js";
 import { diffCommand } from "./commands/diff.js";
 import { hashObjectCommand } from "./commands/hash-object.js";
 import { initCommand } from "./commands/init.js";
@@ -13,6 +15,7 @@ import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
 import { mvCommand } from "./commands/mv.js";
 import { rebaseCommand } from "./commands/rebase.js";
+import { reflogCommand } from "./commands/reflog.js";
 import { rmCommand } from "./commands/rm.js";
 import { revertCommand } from "./commands/revert.js";
 import { resetCommand } from "./commands/reset.js";
@@ -156,6 +159,28 @@ if (!command || command === "--help" || command === "-h") {
 
       case "tag":
         await tagCommand(args.slice(1));
+        break;
+
+      case "reflog":
+        if (args.length > 2) {
+          fail(command, "at most one ref name is allowed");
+          break;
+        }
+
+        await reflogCommand(args[1]);
+        break;
+
+      case "config":
+        await configCommand(args.slice(1));
+        break;
+
+      case "description":
+        if (args.length > 2) {
+          fail(command, "the description must be one argument; quote it if needed");
+          break;
+        }
+
+        await descriptionCommand(args[1]);
         break;
 
       case "switch": {

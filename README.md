@@ -25,6 +25,9 @@ viit restore [--staged] <file> [...files]
 viit mv <source> <destination>
 viit revert <commit|branch|tag|HEAD|--continue|--abort>
 viit tag [-d <name> | -a <name> -m <message> | <name>]
+viit reflog [HEAD|branch]
+viit config [--list|--get <key>|--unset <key>|<key> [value]]
+viit description [text]
 viit add .
 viit status
 viit diff

@@ -9,5 +9,5 @@ export async function updateRefCommand(
     throw new Error("Object ID must be a 40-character SHA-1 hash");
   }
 
-  await writeRef(refName, objectId);
+  await writeRef(refName, objectId, "update-ref");
 }

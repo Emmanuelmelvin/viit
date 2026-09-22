@@ -21,7 +21,7 @@ export async function writeCommit(
     throw new Error("Parent IDs must be 40-character SHA-1 hashes");
   }
 
-  const identity = getIdentity();
+  const identity = await getIdentity();
   const headers = [`tree ${treeId}`];
 
   headers.push(...parents.map((parentId) => `parent ${parentId}`));

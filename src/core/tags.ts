@@ -26,7 +26,7 @@ export async function writeAnnotatedTag(
   }
 
   const content = Buffer.from(
-    `object ${objectId}\ntype commit\ntag ${name}\ntagger ${getIdentity()}\n\n${message}\n`,
+    `object ${objectId}\ntype commit\ntag ${name}\ntagger ${await getIdentity()}\n\n${message}\n`,
   );
   return writeObject("tag", content);
 }
