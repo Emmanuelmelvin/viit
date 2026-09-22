@@ -13,6 +13,7 @@ import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
 import { rebaseCommand } from "./commands/rebase.js";
 import { rmCommand } from "./commands/rm.js";
+import { resetCommand } from "./commands/reset.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
 import { updateRefCommand } from "./commands/update-ref.js";
@@ -82,6 +83,31 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await rmCommand(fileNames, cached);
+        break;
+      }
+
+      case "reset": {
+        const modeArgument = args[1];
+        const mode = modeArgument === "--soft"
+          ? "soft"
+          : modeArgument === "--hard"
+            ? "hard"
+            : modeArgument === "--mixed"
+              ? "mixed"
+              : "mixed";
+        const target = modeArgument?.startsWith("--") ? args[2] : args[1];
+
+        if (!target) {
+          fail(command, "a commit ID, branch name, or HEAD is required");
+          break;
+        }
+
+        if (modeArgument?.startsWith("--") && !["--soft", "--mixed", "--hard"].includes(modeArgument)) {
+          fail(command, `unknown reset option '${modeArgument}'`);
+          break;
+        }
+
+        await resetCommand(target, mode);
         break;
       }
 

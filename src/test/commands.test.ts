@@ -8,11 +8,13 @@ import { commitCommand } from "../commands/commit.js";
 import { mergeCommand } from "../commands/merge.js";
 import { rebaseCommand } from "../commands/rebase.js";
 import { rmCommand } from "../commands/rm.js";
+import { resetCommand } from "../commands/reset.js";
 import { switchCommand } from "../commands/switch.js";
 import { readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
 import { readRebaseState } from "../core/rebase-state.js";
 import { readHead, readRef } from "../core/refs.js";
+import { readIndex } from "../core/index.js";
 import { commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
 
 test("switch refuses to overwrite dirty files", async () => {
@@ -220,5 +222,49 @@ test("rm refuses untracked and modified files", async () => {
       rmCommand(["note.txt"]),
       /has changes/,
     );
+  });
+});
+
+test("reset --soft moves only the branch", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "first\n", "first");
+    const firstCommit = await readHead();
+    await commitFile("note.txt", "second\n", "second");
+    const secondIndex = await readIndex();
+
+    await quiet(() => resetCommand(firstCommit, "soft"));
+
+    assert.equal(await readHead(), firstCommit);
+    assert.deepEqual(await readIndex(), secondIndex);
+    assert.equal(await readFile("note.txt", "utf8"), "second\n");
+  });
+});
+
+test("reset --mixed resets the index but keeps files", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "first\n", "first");
+    const firstCommit = await readHead();
+    const firstIndex = await readIndex();
+    await commitFile("note.txt", "second\n", "second");
+
+    await quiet(() => resetCommand(firstCommit));
+
+    assert.equal(await readHead(), firstCommit);
+    assert.equal(await readFile("note.txt", "utf8"), "second\n");
+    assert.deepEqual(await readIndex(), firstIndex);
+  });
+});
+
+test("reset --hard resets the branch, index, and files", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "first\n", "first");
+    const firstCommit = await readHead();
+    await commitFile("note.txt", "second\n", "second");
+
+    await quiet(() => resetCommand(firstCommit, "hard"));
+
+    assert.equal(await readHead(), firstCommit);
+    assert.equal(await readFile("note.txt", "utf8"), "first\n");
+    assert.equal(Object.keys(await readIndex()).length, 1);
   });
 });

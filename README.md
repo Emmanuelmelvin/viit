@@ -20,6 +20,7 @@ Viit uses `.viit/` for its repository metadata so it does not interfere with a n
 viit init
 viit add <file> [...files]
 viit rm [--cached] <file> [...files]
+viit reset [--soft|--mixed|--hard] <commit|branch|HEAD>
 viit add .
 viit status
 viit diff
