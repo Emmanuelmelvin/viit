@@ -19,6 +19,7 @@ Viit uses `.viit/` for its repository metadata so it does not interfere with a n
 ```bash
 viit init
 viit add <file> [...files]
+viit rm [--cached] <file> [...files]
 viit add .
 viit status
 viit diff

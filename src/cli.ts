@@ -12,6 +12,7 @@ import { initCommand } from "./commands/init.js";
 import { logCommand } from "./commands/log.js";
 import { mergeCommand } from "./commands/merge.js";
 import { rebaseCommand } from "./commands/rebase.js";
+import { rmCommand } from "./commands/rm.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
 import { updateRefCommand } from "./commands/update-ref.js";
@@ -68,6 +69,19 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await addCommand(fileNames);
+        break;
+      }
+
+      case "rm": {
+        const cached = args[1] === "--cached";
+        const fileNames = cached ? args.slice(2) : args.slice(1);
+
+        if (fileNames.length === 0) {
+          fail(command, "at least one file path is required");
+          break;
+        }
+
+        await rmCommand(fileNames, cached);
         break;
       }
 

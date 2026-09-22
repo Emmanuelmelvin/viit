@@ -7,6 +7,7 @@ import { checkoutCommand } from "../commands/checkout.js";
 import { commitCommand } from "../commands/commit.js";
 import { mergeCommand } from "../commands/merge.js";
 import { rebaseCommand } from "../commands/rebase.js";
+import { rmCommand } from "../commands/rm.js";
 import { switchCommand } from "../commands/switch.js";
 import { readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
@@ -177,6 +178,47 @@ test("checkout refuses to overwrite dirty files", async () => {
     await assert.rejects(
       checkoutCommand(firstCommit),
       /Cannot checkout: 'note.txt' has unstaged changes/,
+    );
+  });
+});
+
+test("rm removes a tracked file from disk and the index", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "content\n", "initial");
+
+    await quiet(() => rmCommand(["note.txt"]));
+
+    await assert.rejects(readFile("note.txt"));
+    const { readIndex } = await import("../core/index.js");
+    assert.deepEqual(await readIndex(), {});
+  });
+});
+
+test("rm --cached keeps the file on disk", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "content\n", "initial");
+
+    await quiet(() => rmCommand(["note.txt"], true));
+
+    assert.equal(await readFile("note.txt", "utf8"), "content\n");
+    const { readIndex } = await import("../core/index.js");
+    assert.deepEqual(await readIndex(), {});
+  });
+});
+
+test("rm refuses untracked and modified files", async () => {
+  await withRepository(async () => {
+    await assert.rejects(
+      rmCommand(["missing.txt"]),
+      /did not match any tracked files/,
+    );
+
+    await commitFile("note.txt", "content\n", "initial");
+    await setFile("note.txt", "changed\n");
+
+    await assert.rejects(
+      rmCommand(["note.txt"]),
+      /has changes/,
     );
   });
 });

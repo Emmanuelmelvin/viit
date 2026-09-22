@@ -1,6 +1,7 @@
 export const COMMANDS = [
   "init",
   "add",
+  "rm",
   "branch",
   "switch",
   "merge",
@@ -20,6 +21,7 @@ export const COMMANDS = [
 const USAGE: Record<string, string> = {
   init: "viit init",
   add: "viit add <file> [...files]",
+  rm: "viit rm [--cached] <file> [...files]",
   branch: "viit branch [name]",
   switch: "viit switch <branch>",
   merge: "viit merge <branch|--abort>",
@@ -39,6 +41,7 @@ const USAGE: Record<string, string> = {
 const DESCRIPTIONS: Record<string, string> = {
   init: "Create an empty Viit repository.",
   add: "Stage file contents.",
+  rm: "Remove files from the working tree and index.",
   branch: "Create or list branches.",
   switch: "Switch to a branch.",
   merge: "Merge a branch into the current branch.",
