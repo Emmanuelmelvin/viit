@@ -14,6 +14,7 @@ import { mergeCommand } from "./commands/merge.js";
 import { rebaseCommand } from "./commands/rebase.js";
 import { rmCommand } from "./commands/rm.js";
 import { resetCommand } from "./commands/reset.js";
+import { restoreCommand } from "./commands/restore.js";
 import { statusCommand } from "./commands/status.js";
 import { switchCommand } from "./commands/switch.js";
 import { updateRefCommand } from "./commands/update-ref.js";
@@ -108,6 +109,19 @@ if (!command || command === "--help" || command === "-h") {
         }
 
         await resetCommand(target, mode);
+        break;
+      }
+
+      case "restore": {
+        const staged = args[1] === "--staged";
+        const fileNames = staged ? args.slice(2) : args.slice(1);
+
+        if (fileNames.length === 0) {
+          fail(command, "at least one file path is required");
+          break;
+        }
+
+        await restoreCommand(fileNames, staged);
         break;
       }
 

@@ -9,6 +9,7 @@ import { mergeCommand } from "../commands/merge.js";
 import { rebaseCommand } from "../commands/rebase.js";
 import { rmCommand } from "../commands/rm.js";
 import { resetCommand } from "../commands/reset.js";
+import { restoreCommand } from "../commands/restore.js";
 import { switchCommand } from "../commands/switch.js";
 import { readCommitParents } from "../core/commits.js";
 import { readMergeHead } from "../core/merge-state.js";
@@ -266,5 +267,32 @@ test("reset --hard resets the branch, index, and files", async () => {
     assert.equal(await readHead(), firstCommit);
     assert.equal(await readFile("note.txt", "utf8"), "first\n");
     assert.equal(Object.keys(await readIndex()).length, 1);
+  });
+});
+
+test("restore resets a working file from the index", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "initial\n", "initial");
+    await setFile("note.txt", "staged\n");
+    await quiet(() => addCommand(["note.txt"]));
+    await setFile("note.txt", "unstaged\n");
+
+    await quiet(() => restoreCommand(["note.txt"]));
+
+    assert.equal(await readFile("note.txt", "utf8"), "staged\n");
+  });
+});
+
+test("restore --staged resets the index from HEAD", async () => {
+  await withRepository(async () => {
+    await commitFile("note.txt", "initial\n", "initial");
+    await setFile("note.txt", "changed\n");
+    await quiet(() => addCommand(["note.txt"]));
+
+    await quiet(() => restoreCommand(["note.txt"], true));
+
+    assert.equal(await readFile("note.txt", "utf8"), "changed\n");
+    assert.equal(Object.keys(await readIndex()).length, 1);
+    assert.equal((await readIndex())["note.txt"] !== undefined, true);
   });
 });

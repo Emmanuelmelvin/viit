@@ -21,6 +21,7 @@ viit init
 viit add <file> [...files]
 viit rm [--cached] <file> [...files]
 viit reset [--soft|--mixed|--hard] <commit|branch|HEAD>
+viit restore [--staged] <file> [...files]
 viit add .
 viit status
 viit diff
