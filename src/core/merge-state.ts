@@ -44,6 +44,7 @@ export async function markConflictsResolved(filePaths: string[]): Promise<void> 
   await removeRepositoryFile("mergeConflicts");
 }
 
+//cancels all merges.
 export async function clearMergeState(): Promise<void> {
   await Promise.all([
     removeRepositoryFile("mergeHead"),
