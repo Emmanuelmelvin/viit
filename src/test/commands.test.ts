@@ -30,6 +30,7 @@ import { readTag } from "../core/tags.js";
 import { readIndex } from "../core/index.js";
 import { captureOutput, commitFile, createConflictingBranches, quiet, setFile, withRepository } from "./helpers.js";
 
+//tests switch refuses to overwrite dirty files
 test("switch refuses to overwrite dirty files", async () => {
   await withRepository(async () => {
     await setFile("note.txt", "clean\n");
@@ -45,6 +46,7 @@ test("switch refuses to overwrite dirty files", async () => {
   });
 });
 
+//tests merge creates a conflict that can be resolved and committed
 test("merge creates a conflict that can be resolved and committed", async () => {
   await withRepository(async () => {
     await createConflictingBranches();
@@ -67,6 +69,7 @@ test("merge creates a conflict that can be resolved and committed", async () => 
   });
 });
 
+//tests rebase can continue after a conflict
 test("rebase can continue after a conflict", async () => {
   await withRepository(async () => {
     await createConflictingBranches();
@@ -87,6 +90,7 @@ test("rebase can continue after a conflict", async () => {
   });
 });
 
+//tests rebase can resolve a modify/delete conflict by staging deletion
 test("rebase can resolve a modify/delete conflict by staging deletion", async () => {
   await withRepository(async () => {
     await setFile("note.txt", "base\n");
@@ -113,6 +117,7 @@ test("rebase can resolve a modify/delete conflict by staging deletion", async ()
   });
 });
 
+//tests rebase abort restores the original branch
 test("rebase abort restores the original branch", async () => {
   await withRepository(async () => {
     await createConflictingBranches();
@@ -127,6 +132,7 @@ test("rebase abort restores the original branch", async () => {
   });
 });
 
+//tests rebase skip omits the conflicting commit
 test("rebase skip omits the conflicting commit", async () => {
   await withRepository(async () => {
     await createConflictingBranches();
@@ -141,6 +147,7 @@ test("rebase skip omits the conflicting commit", async () => {
   });
 });
 
+//tests merge abort restores the original branch
 test("merge abort restores the original branch", async () => {
   await withRepository(async () => {
     await createConflictingBranches();
@@ -156,6 +163,7 @@ test("merge abort restores the original branch", async () => {
   });
 });
 
+//tests rebase flattens merge commits
 test("rebase flattens merge commits", async () => {
   await withRepository(async () => {
     await commitFile("base.txt", "base\n", "base");
@@ -180,6 +188,7 @@ test("rebase flattens merge commits", async () => {
   });
 });
 
+//tests checkout refuses to overwrite dirty files
 test("checkout refuses to overwrite dirty files", async () => {
   await withRepository(async () => {
     await setFile("note.txt", "clean\n");
@@ -197,6 +206,7 @@ test("checkout refuses to overwrite dirty files", async () => {
   });
 });
 
+//tests lightweight tags point to commits and can be listed or deleted
 test("lightweight tags point to commits and can be listed or deleted", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "content\n", "initial");
@@ -213,6 +223,7 @@ test("lightweight tags point to commits and can be listed or deleted", async () 
   });
 });
 
+//tests annotated tags point to tag objects and resolve to commits
 test("annotated tags point to tag objects and resolve to commits", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "content\n", "initial");
@@ -230,6 +241,7 @@ test("annotated tags point to tag objects and resolve to commits", async () => {
   });
 });
 
+//tests commit revisions can be resolved through tags by reset
 test("commit revisions can be resolved through tags by reset", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "first\n", "first");
