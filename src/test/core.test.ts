@@ -5,6 +5,7 @@ import { readObject, writeObject } from "../core/objects.js";
 import { readTree, writeTree } from "../core/trees.js";
 import { withRepository } from "./helpers.js";
 
+//blobs are used to store the content of the files.
 test("blob objects are stable and readable", async () => {
   await withRepository(async () => {
     const firstId = await writeObject("blob", Buffer.from("hello\n"));
