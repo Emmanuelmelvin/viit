@@ -429,6 +429,7 @@ test("mv moves a tracked file and stages the rename", async () => {
   });
 });
 
+//tests mv refuses modified, missing, and existing destinations
 test("mv refuses modified, missing, and existing destinations", async () => {
   await withRepository(async () => {
     await assert.rejects(mvCommand("missing.txt", "new.txt"), /did not match/);
@@ -443,6 +444,7 @@ test("mv refuses modified, missing, and existing destinations", async () => {
   });
 });
 
+//tests diff prints hunk ranges for working-tree changes
 test("diff prints hunk ranges for working-tree changes", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "one\ntwo\n", "initial");
@@ -454,6 +456,7 @@ test("diff prints hunk ranges for working-tree changes", async () => {
   });
 });
 
+//tests revert creates a new commit that undoes a commit
 test("revert creates a new commit that undoes a commit", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "initial\n", "initial");
@@ -470,6 +473,7 @@ test("revert creates a new commit that undoes a commit", async () => {
   });
 });
 
+//tests revert can continue after a conflict
 test("revert can continue after a conflict", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "initial\n", "initial");
