@@ -21,7 +21,7 @@ function getReflogPath(refName: string): string {
   return path.join(getViitDirectory(), "logs", refName);
 }
 
-// basically tracks every change made to the head ref 
+// basically tracks every change made to the head ref and each branch ref
 export async function appendReflog(
   refName: string,
   oldId: string,
