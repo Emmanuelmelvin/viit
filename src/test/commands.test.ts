@@ -256,6 +256,7 @@ test("commit revisions can be resolved through tags by reset", async () => {
   });
 });
 
+//tests reflog records branch and HEAD movements
 test("reflog records branch and HEAD movements", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "first\n", "first");
@@ -276,6 +277,7 @@ test("reflog records branch and HEAD movements", async () => {
   });
 });
 
+//tests config and description are stored in repository metadata
 test("config and description are stored in repository metadata", async () => {
   await withRepository(async () => {
     await quiet(() => configCommand(["user.name", "Ada Lovelace"]));
