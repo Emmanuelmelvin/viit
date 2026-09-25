@@ -17,6 +17,7 @@ test("blob objects are stable and readable", async () => {
   });
 });
 
+//trees are used to store the snapshot of the repository at a particular commit. 
 test("trees preserve nested file paths", async () => {
   await withRepository(async () => {
     const readmeId = await writeObject("blob", Buffer.from("readme"));
@@ -33,6 +34,7 @@ test("trees preserve nested file paths", async () => {
   });
 });
 
+//commits are immutable snapshots of the repository at a particular commit. 
 test("commits preserve parents, trees, and messages", async () => {
   await withRepository(async () => {
     const blobId = await writeObject("blob", Buffer.from("content"));
