@@ -498,6 +498,7 @@ test("revert can continue after a conflict", async () => {
   });
 });
 
+//tests revert abort restores the original commit
 test("revert abort restores the original commit", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "initial\n", "initial");
