@@ -21,6 +21,7 @@ function getReflogPath(refName: string): string {
   return path.join(getViitDirectory(), "logs", refName);
 }
 
+//basically tracks
 export async function appendReflog(
   refName: string,
   oldId: string,
