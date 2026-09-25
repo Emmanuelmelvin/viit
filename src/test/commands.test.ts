@@ -370,6 +370,7 @@ test("reset --mixed resets the index but keeps files", async () => {
   });
 });
 
+//tests reset --hard resets the branch, index, and files
 test("reset --hard resets the branch, index, and files", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "first\n", "first");
@@ -384,6 +385,7 @@ test("reset --hard resets the branch, index, and files", async () => {
   });
 });
 
+//tests restore resets a working file from the index
 test("restore resets a working file from the index", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "initial\n", "initial");
