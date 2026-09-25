@@ -294,6 +294,7 @@ test("config and description are stored in repository metadata", async () => {
   });
 });
 
+//tests rm removes a tracked file from disk and the index
 test("rm removes a tracked file from disk and the index", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "content\n", "initial");
@@ -306,6 +307,7 @@ test("rm removes a tracked file from disk and the index", async () => {
   });
 });
 
+//tests rm --cached keeps the file on disk
 test("rm --cached keeps the file on disk", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "content\n", "initial");
@@ -318,6 +320,7 @@ test("rm --cached keeps the file on disk", async () => {
   });
 });
 
+//tests rm refuses untracked and modified files
 test("rm refuses untracked and modified files", async () => {
   await withRepository(async () => {
     await assert.rejects(
@@ -335,6 +338,7 @@ test("rm refuses untracked and modified files", async () => {
   });
 });
 
+//tests reset --soft moves only the branch
 test("reset --soft moves only the branch", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "first\n", "first");
@@ -350,6 +354,7 @@ test("reset --soft moves only the branch", async () => {
   });
 });
 
+//tests reset --mixed resets the index but keeps files
 test("reset --mixed resets the index but keeps files", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "first\n", "first");
