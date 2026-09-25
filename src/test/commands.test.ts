@@ -399,6 +399,7 @@ test("restore resets a working file from the index", async () => {
   });
 });
 
+//tests restore --staged resets the index from HEAD
 test("restore --staged resets the index from HEAD", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "initial\n", "initial");
@@ -413,6 +414,7 @@ test("restore --staged resets the index from HEAD", async () => {
   });
 });
 
+//tests mv moves a tracked file and stages the rename
 test("mv moves a tracked file and stages the rename", async () => {
   await withRepository(async () => {
     await commitFile("note.txt", "content\n", "initial");
