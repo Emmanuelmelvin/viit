@@ -8,6 +8,7 @@ import {
   writeRepositoryFile,
 } from "./repository-files.js";
 
+// returns the path to a ref
 export function getRefPath(refName: string): string {
   if (!REF_PATTERN.test(refName) || refName.includes("..")) {
     throw new Error("Only local branch and tag refs are supported");
@@ -16,6 +17,7 @@ export function getRefPath(refName: string): string {
   return path.join(getViitDirectory(), refName);
 }
 
+// reads a ref or empty if it doesn't exist
 async function readRefOrEmpty(refPath: string): Promise<string> {
   try {
     return (await readFile(refPath, "utf8")).trim() || EMPTY_OBJECT_ID;
@@ -28,6 +30,7 @@ async function readRefOrEmpty(refPath: string): Promise<string> {
   }
 }
 
+// writes a ref
 export async function writeRef(
   refName: string,
   objectId: string,
@@ -53,6 +56,7 @@ export async function writeRef(
   }
 }
 
+// writes the head ref
 export async function writeHeadRef(refName: string, action = "checkout"): Promise<void> {
   getRefPath(refName);
   const oldId = await readHead().catch(() => EMPTY_OBJECT_ID);
@@ -64,10 +68,12 @@ export async function writeHeadRef(refName: string, action = "checkout"): Promis
   }
 }
 
+// reads a ref
 export async function readRef(refName: string): Promise<string> {
   return (await readFile(getRefPath(refName), "utf8")).trim();
 }
 
+// removes a ref
 export async function removeRef(refName: string): Promise<void> {
   try {
     await unlink(getRefPath(refName));
@@ -78,11 +84,13 @@ export async function removeRef(refName: string): Promise<void> {
   }
 }
 
+// reads the head ref
 export async function readHead(): Promise<string> {
   const refName = await readHeadRef();
   return readRef(refName);
 }
 
+// reads the head ref
 export async function readHeadRef(): Promise<string> {
   const head = (await readRepositoryFile("head"))?.trim();
 

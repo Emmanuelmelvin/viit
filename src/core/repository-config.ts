@@ -4,12 +4,14 @@ export type RepositoryConfig = Record<string, string>;
 
 const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9-]*\.[A-Za-z][A-Za-z0-9-]*$/;
 
+// validates a config key
 export function validateConfigKey(key: string): void {
   if (!KEY_PATTERN.test(key)) {
     throw new Error("Config keys must look like section.name");
   }
 }
 
+// parses a config
 export function parseConfig(content: string): RepositoryConfig {
   const values: RepositoryConfig = {};
   let section = "";
@@ -42,6 +44,7 @@ export function parseConfig(content: string): RepositoryConfig {
   return values;
 }
 
+// serializes a config
 export function serializeConfig(values: RepositoryConfig): string {
   const sections = new Map<string, Array<[string, string]>>();
 
@@ -64,19 +67,23 @@ export function serializeConfig(values: RepositoryConfig): string {
     .join("\n");
 }
 
+// reads a config
 export async function readConfig(): Promise<RepositoryConfig> {
   return parseConfig(await readRepositoryFile("config") ?? "");
 }
 
+// writes a config
 export async function writeConfig(values: RepositoryConfig): Promise<void> {
   await writeRepositoryFile("config", serializeConfig(values));
 }
 
+// reads a config value
 export async function readConfigValue(key: string): Promise<string | undefined> {
   validateConfigKey(key);
   return (await readConfig())[key];
 }
 
+// writes a config value
 export async function writeConfigValue(key: string, value: string): Promise<void> {
   validateConfigKey(key);
   const values = await readConfig();
@@ -84,6 +91,7 @@ export async function writeConfigValue(key: string, value: string): Promise<void
   await writeConfig(values);
 }
 
+// removes a config value
 export async function removeConfigValue(key: string): Promise<void> {
   validateConfigKey(key);
   const values = await readConfig();

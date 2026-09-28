@@ -1,5 +1,6 @@
 import { readCommitParents } from "./commits.js";
 
+// checks if a commit is an ancestor of another commit
 export async function isAncestor(
   ancestorId: string,
   commitId: string,
@@ -25,6 +26,7 @@ export async function isAncestor(
   return false;
 }
 
+// finds the merge base of two branches
 export async function findMergeBase(
   firstId: string,
   secondId: string,

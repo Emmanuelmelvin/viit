@@ -2,6 +2,7 @@ import { readObject, writeObject } from "./objects.js";
 import { HASH_PATTERN } from "./config.js";
 import { getIdentity } from "./identity.js";
 
+// writes a commit object
 export async function writeCommit(
   treeId: string,
   parentIds: string | string[] | undefined,
@@ -32,6 +33,7 @@ export async function writeCommit(
   return writeObject("commit", content);
 }
 
+// reads the tree id from a commit
 export async function readCommitTree(commitId: string): Promise<string> {
   const object = await readObject(commitId);
 
@@ -51,6 +53,7 @@ export async function readCommitTree(commitId: string): Promise<string> {
   return treeHeader.slice("tree ".length);
 }
 
+// reads the parents of a commit
 export async function readCommitParents(commitId: string): Promise<string[]> {
   const object = await readObject(commitId);
 
@@ -65,6 +68,7 @@ export async function readCommitParents(commitId: string): Promise<string[]> {
     .map((line) => line.slice("parent ".length));
 }
 
+// reads the message of a commit
 export async function readCommitMessage(commitId: string): Promise<string> {
   const object = await readObject(commitId);
 

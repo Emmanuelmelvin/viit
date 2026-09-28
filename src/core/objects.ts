@@ -4,6 +4,7 @@ import path from "node:path";
 import { deflateSync, inflateSync } from "node:zlib";
 import { getObjectPath } from "./repository.js";
 
+// creates an object
 function createObject(
   type: string,
   content: Buffer,
@@ -15,16 +16,21 @@ function createObject(
   return { object, objectId };
 }
 
+
+// hashes a blob
 export async function hashBlob(fileName: string): Promise<string> {
   const content = await readFile(fileName);
   return createObject("blob", content).objectId;
 }
 
+// writes a blob
 export async function writeBlob(fileName: string): Promise<string> {
   const content = await readFile(fileName);
   return writeObject("blob", content);
 }
 
+
+// writes an object
 export async function writeObject(type: string, content: Buffer): Promise<string> {
   const { object, objectId } = createObject(type, content);
   const objectPath = getObjectPath(objectId);
@@ -35,6 +41,8 @@ export async function writeObject(type: string, content: Buffer): Promise<string
   return objectId;
 }
 
+
+// reads an object
 export async function readObject(
   objectId: string,
 ): Promise<{ type: string; content: Buffer }> {

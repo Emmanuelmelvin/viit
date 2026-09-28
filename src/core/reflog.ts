@@ -13,6 +13,7 @@ export type ReflogEntry = {
   action: string;
 };
 
+// returns the path to the reflog file
 function getReflogPath(refName: string): string {
   if (refName !== "HEAD" && (!REF_PATTERN.test(refName) || refName.includes(".."))) {
     throw new Error("Reflogs require HEAD or a local branch/tag ref");
@@ -37,6 +38,7 @@ export async function appendReflog(
   await appendFile(reflogPath, `${oldId} ${newId} ${await getIdentity()}\t${action}\n`);
 }
 
+// reads the reflog
 export async function readReflog(refName: string): Promise<ReflogEntry[]> {
   const reflogPath = getReflogPath(refName);
   let content: string;

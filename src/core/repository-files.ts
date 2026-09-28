@@ -18,10 +18,12 @@ export const REPOSITORY_PATHS = {
 
 export type RepositoryPathName = keyof typeof REPOSITORY_PATHS;
 
+// returns the path of a repository file
 export function getRepositoryPath(name: RepositoryPathName): string {
   return path.join(getViitDirectory(), REPOSITORY_PATHS[name]);
 }
 
+// reads a repository file
 export async function readRepositoryFile(
   name: RepositoryPathName,
 ): Promise<string | undefined> {
@@ -36,6 +38,7 @@ export async function readRepositoryFile(
   }
 }
 
+// writes a repository file
 export async function writeRepositoryFile(
   name: RepositoryPathName,
   content: string,
@@ -45,6 +48,7 @@ export async function writeRepositoryFile(
   await writeFile(filePath, content);
 }
 
+// removes a repository file
 export async function removeRepositoryFile(name: RepositoryPathName): Promise<void> {
   try {
     await unlink(getRepositoryPath(name));
