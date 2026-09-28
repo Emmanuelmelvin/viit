@@ -8,6 +8,7 @@ import { readTree } from "./trees.js";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".viit", "dist", "node_modules"]);
 
+// lists all the files in the working directory
 async function listWorkingFiles(
   directory: string,
   prefix = "",
@@ -32,6 +33,7 @@ async function listWorkingFiles(
   return files;
 }
 
+// reads the head tree
 async function readHeadTree(): Promise<Record<string, string>> {
   try {
     const commitId = await readHead();
@@ -45,6 +47,7 @@ async function readHeadTree(): Promise<Record<string, string>> {
   }
 }
 
+// asserts that the worktree is clean before operations
 export async function assertCleanWorktree(operation: string): Promise<void> {
   const index = await readIndex();
   const headTree = await readHeadTree();
