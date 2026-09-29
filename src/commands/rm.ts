@@ -6,6 +6,7 @@ import { markRebaseConflictsResolved } from "../core/rebase-state.js";
 import { markRevertConflictsResolved } from "../core/revert-state.js";
 import { hashBlob } from "../core/objects.js";
 
+//converts a file path to an index path.
 function toIndexPath(fileName: string): string {
   const indexPath = path.relative(process.cwd(), path.resolve(fileName)).replaceAll("\\", "/");
 
@@ -16,6 +17,7 @@ function toIndexPath(fileName: string): string {
   return indexPath;
 }
 
+//Checks if the file has changes.
 async function fileHasChanges(fileName: string, expectedObjectId: string): Promise<boolean> {
   try {
     return await hashBlob(fileName) !== expectedObjectId;
@@ -28,6 +30,7 @@ async function fileHasChanges(fileName: string, expectedObjectId: string): Promi
   }
 }
 
+//Removes files from the index.
 export async function rmCommand(fileNames: string[], cached = false): Promise<void> {
   const index = await readIndex();
   const indexPaths = fileNames.map(toIndexPath);
