@@ -12,6 +12,7 @@ function branchRef(name: string): string {
   return `refs/heads/${name}`;
 }
 
+//creates or lists branches
 export async function branchCommand(name?: string): Promise<void> {
   if (name) {
     const refName = branchRef(name);
