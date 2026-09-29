@@ -12,6 +12,7 @@ function toIndexPath(fileName: string): string {
   return path.relative(process.cwd(), path.resolve(fileName)).replaceAll("\\", "/");
 }
 
+//expands the path to include all the files in the directory
 async function expandPath(fileName: string): Promise<string[]> {
   const absolutePath = path.resolve(fileName);
   const fileInfo = await stat(absolutePath);
@@ -37,6 +38,7 @@ async function expandPath(fileName: string): Promise<string[]> {
   return files;
 }
 
+//Adds files to the index.
 export async function addCommand(fileNames: string[]): Promise<void> {
   const index = await readIndex();
   const files = new Set<string>();
