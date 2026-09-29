@@ -5,6 +5,7 @@ import { getViitDirectory } from "../core/repository.js";
 import { writeAnnotatedTag } from "../core/tags.js";
 import { NAME_PATTERN } from "../core/config.js";
 
+//returns the ref name for a tag.
 function tagRef(name: string): string {
   if (!NAME_PATTERN.test(name)) {
     throw new Error("Tag names may contain letters, numbers, dots, underscores, and hyphens");
@@ -13,6 +14,7 @@ function tagRef(name: string): string {
   return `refs/tags/${name}`;
 }
 
+//ensures the tag does not exist.
 async function ensureTagDoesNotExist(name: string): Promise<string> {
   const refName = tagRef(name);
 
@@ -28,6 +30,7 @@ async function ensureTagDoesNotExist(name: string): Promise<string> {
   return refName;
 }
 
+//lists the tags.
 async function listTags(): Promise<void> {
   const tagsPath = path.join(getViitDirectory(), "refs", "tags");
   let tags: string[];
@@ -47,6 +50,7 @@ async function listTags(): Promise<void> {
   }
 }
 
+//creates or lists tags
 export async function tagCommand(args: string[]): Promise<void> {
   if (args.length === 0) {
     await listTags();

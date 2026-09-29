@@ -1,6 +1,7 @@
 import { writeRef } from "../core/refs.js";
 import { HASH_PATTERN } from "../core/config.js";
 
+//Updates a reference. Usually used by other commands.
 export async function updateRefCommand(
   refName: string,
   objectId: string,
