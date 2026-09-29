@@ -5,6 +5,7 @@ import {
   writeConfigValue,
 } from "../core/repository-config.js";
 
+//gets or sets a configuration value.
 export async function configCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args[0] === "--list") {
     if (args.length > 1) {

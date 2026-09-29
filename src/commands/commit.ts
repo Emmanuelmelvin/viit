@@ -4,6 +4,7 @@ import { clearMergeState, readMergeConflicts, readMergeHead } from "../core/merg
 import { readHeadRef, readRef, writeRef } from "../core/refs.js";
 import { writeTree } from "../core/trees.js";
 
+//Records all the files in the index and the parent commit (if any) as a new commit.
 export async function commitCommand(message: string): Promise<void> {
   const refName = await readHeadRef();
   const treeId = await writeTree(await readIndex());

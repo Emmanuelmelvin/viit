@@ -9,6 +9,7 @@ import { assertCleanWorktree } from "../core/worktree.js";
 import { HASH_PATTERN } from "../core/config.js";
 import { resolveRevision } from "../core/revisions.js";
 
+//restores the tree.
 export async function restoreTree(targetIndex: Record<string, string>): Promise<void> {
   const currentIndex = await readIndex();
 
@@ -41,6 +42,7 @@ export async function restoreTree(targetIndex: Record<string, string>): Promise<
   await writeIndex(targetIndex);
 }
 
+//restores the commit.
 export async function restoreCommit(commitId: string): Promise<void> {
   if (!HASH_PATTERN.test(commitId)) {
     throw new Error("Commit ID must be a 40-character SHA-1 hash");

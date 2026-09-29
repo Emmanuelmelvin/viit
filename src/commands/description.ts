@@ -1,5 +1,6 @@
 import { readRepositoryFile, writeRepositoryFile } from "../core/repository-files.js";
 
+//gets or sets the description of a repository.
 export async function descriptionCommand(value?: string): Promise<void> {
   if (value === undefined) {
     console.log((await readRepositoryFile("description") ?? "").trimEnd());
